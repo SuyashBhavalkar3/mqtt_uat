@@ -9,9 +9,7 @@ import ModelComparison from './ModelComparison';
 import { modelResults } from '@/lib/mockData';
 
 export default function PredictionDashboard() {
-  const [selectedModel, setSelectedModel] = useState<string>(
-    Object.keys(modelResults)[0]
-  );
+  const [selectedModel] = useState<string>(Object.keys(modelResults)[0]);
 
   const bestModel = Object.keys(modelResults).reduce((best, current) =>
     modelResults[current] > modelResults[best] ? current : best
@@ -106,7 +104,7 @@ export default function PredictionDashboard() {
         <h3 className="text-lg font-light mb-6 text-gray-700 tracking-wide">
           📚 Advanced Analytics
         </h3>
-        <AnalyticsTabs selectedModel={selectedModel} />
+        <AnalyticsTabs />
       </div>
     </div>
   );
