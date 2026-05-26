@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import ModelMetrics from './ModelMetrics';
 import ChartComponent from './ChartComponent';
 import AnalyticsTabs from './AnalyticsTabs';
@@ -9,8 +8,6 @@ import ModelComparison from './ModelComparison';
 import { modelResults } from '@/lib/mockData';
 
 export default function PredictionDashboard() {
-  const [selectedModel] = useState<string>(Object.keys(modelResults)[0]);
-
   const bestModel = Object.keys(modelResults).reduce((best, current) =>
     modelResults[current] > modelResults[best] ? current : best
   );
