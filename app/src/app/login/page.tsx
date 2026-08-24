@@ -18,7 +18,7 @@ export default function LoginPage() {
     try {
       // NOTE: You can define NEXT_PUBLIC_API_BASE_URL in your .env.local file
       // e.g. NEXT_PUBLIC_API_BASE_URL=https://your-frappe-server.com
-      const baseURL = "https://proderp.gbru.in";
+      const baseURL = "https://uaterp.gbru.in";
 
       const response = await fetch(`${baseURL}/api/method/warrior.login.api.login_user`, {
         method: 'POST',
