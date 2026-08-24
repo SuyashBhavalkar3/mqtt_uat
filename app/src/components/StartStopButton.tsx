@@ -1,12 +1,65 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { io, Socket } from 'socket.io-client';
+
+interface DeviceStatusEvent {
+  device_id: string;
+  status: string;
+  status_last_updated: string;
+}
 
 export default function StartStopButton() {
   const [status, setStatus] = useState<'stopped' | 'started'>('stopped');
   const [loading, setLoading] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastIsSuccess, setToastIsSuccess] = useState<boolean>(true);
+  const socketRef = useRef<Socket | null>(null);
   const router = useRouter();
+
+  // Connect to Frappe Socket.io and listen for real-time device status updates
+  useEffect(() => {
+    const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://uaterp.gbru.in';
+    const deviceId = localStorage.getItem('target_device_id') || 'test_motor_01';
+
+    const socket = io(baseURL, {
+      path: '/socket.io',
+      transports: ['websocket'],
+    });
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('[Socket.io] Connected to Frappe realtime server');
+    });
+
+    socket.on('smartiot_device_status_update', (data: DeviceStatusEvent) => {
+      // Only handle events for the currently connected device
+      if (data.device_id !== deviceId) return;
+
+      console.log('[Socket.io] Real-time status update received:', data);
+
+      const isOn = data.status === 'On';
+      const formattedTime = new Date(data.status_last_updated).toLocaleTimeString();
+
+      setStatus(isOn ? 'started' : 'stopped');
+      setToastIsSuccess(isOn);
+      setToastMessage(
+        `${data.device_id} → Status: ${data.status}  •  Updated at ${formattedTime}`
+      );
+    });
+
+    socket.on('disconnect', () => {
+      console.log('[Socket.io] Disconnected from Frappe realtime server');
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('[Socket.io] Connection error:', err.message);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   // Send MQTT command to the ERP using the saved API keys
   const sendMqttRequest = async (action: 'start' | 'stop') => {
@@ -42,15 +95,13 @@ export default function StartStopButton() {
       const data = await response.json();
 
       if (response.ok && data.message?.status === 'Success') {
-        if (action === 'start') {
-          setStatus('started');
-          setToastMessage('Status ON: Machine is running');
-        } else {
-          setStatus('stopped');
-          setToastMessage('Status OFF: Machine has stopped');
-        }
+        // Status will be updated dynamically via Socket.io real-time event.
+        // Show a temporary "command sent" toast while we wait for the socket update.
+        setToastIsSuccess(true);
+        setToastMessage(`Command sent — waiting for real-time confirmation...`);
       } else {
         // API returned an error
+        setToastIsSuccess(false);
         setToastMessage(`Error: ${data.message?.message || 'Failed to send command'}`);
       }
     } catch (error) {
@@ -79,15 +130,6 @@ export default function StartStopButton() {
     router.push('/login');
   };
 
-  // Automatically clear the toast after 3 seconds
-  useEffect(() => {
-    if (toastMessage) {
-      const timer = setTimeout(() => {
-        setToastMessage(null);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toastMessage]);
 
   return (
     <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 relative w-full max-w-2xl">
@@ -110,14 +152,16 @@ export default function StartStopButton() {
       </button>
 
       {/* Real-time Popup Notification */}
-      <div 
-        className={`absolute top-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg font-bold text-white transition-all duration-300 transform min-w-[max-content] z-10 ${
-          toastMessage 
-            ? 'translate-y-0 opacity-100' 
+      <div
+        className={`absolute top-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-xl shadow-lg text-white transition-all duration-300 transform min-w-[max-content] z-10 flex items-center gap-2 ${
+          toastMessage
+            ? 'translate-y-0 opacity-100'
             : '-translate-y-8 opacity-0 pointer-events-none'
-        } ${status === 'started' ? 'bg-green-500' : 'bg-red-500'}`}
+        } ${toastIsSuccess ? 'bg-green-500' : 'bg-red-500'}`}
       >
-        {toastMessage}
+        {/* Dot indicator */}
+        <span className={`w-2 h-2 rounded-full animate-pulse ${toastIsSuccess ? 'bg-green-200' : 'bg-red-200'}`} />
+        <span className="font-semibold text-sm tracking-wide">{toastMessage}</span>
       </div>
 
       <h2 className="text-3xl font-bold mb-10 text-zinc-800 dark:text-zinc-100 mt-8 flex items-center gap-3">
