@@ -1,10 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function StartStopButton() {
   const [status, setStatus] = useState<'stopped' | 'started'>('stopped');
   const [loading, setLoading] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const router = useRouter();
 
   // Send MQTT command to the ERP using the saved API keys
   const sendMqttRequest = async (action: 'start' | 'stop') => {
@@ -67,6 +69,16 @@ export default function StartStopButton() {
     if (status !== 'stopped' && !loading) sendMqttRequest('stop');
   };
 
+  const handleLogout = () => {
+    // Clear all authenticated data
+    localStorage.removeItem('api_key');
+    localStorage.removeItem('api_secret');
+    localStorage.removeItem('user_info');
+    localStorage.removeItem('target_device_id');
+    // Redirect to login page
+    router.push('/login');
+  };
+
   // Automatically clear the toast after 3 seconds
   useEffect(() => {
     if (toastMessage) {
@@ -78,7 +90,25 @@ export default function StartStopButton() {
   }, [toastMessage]);
 
   return (
-    <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 relative">
+    <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 relative w-full max-w-2xl">
+      
+      {/* Back Button */}
+      <button 
+        onClick={() => router.push('/device_add')}
+        className="absolute top-6 left-8 px-4 py-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all flex items-center gap-1"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Back
+      </button>
+
+      {/* Logout Button */}
+      <button 
+        onClick={handleLogout}
+        className="absolute top-6 right-8 px-4 py-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+      >
+        Logout
+      </button>
+
       {/* Real-time Popup Notification */}
       <div 
         className={`absolute top-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg font-bold text-white transition-all duration-300 transform min-w-[max-content] z-10 ${

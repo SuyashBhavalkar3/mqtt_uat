@@ -10,8 +10,8 @@ export default function DeviceSelectionPage() {
 
   const handleEnter = (e: React.FormEvent) => {
     e.preventDefault();
-    if (deviceId.trim() !== 'test_motor_01') {
-      setError("Device not configured. Please use 'test_motor_01' for now.");
+    if (!deviceId.trim()) {
+      setError("Please enter a device ID.");
       return;
     }
     
@@ -21,9 +21,26 @@ export default function DeviceSelectionPage() {
     router.push('/button');
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('api_key');
+    localStorage.removeItem('api_secret');
+    localStorage.removeItem('user_info');
+    localStorage.removeItem('target_device_id');
+    router.push('/login');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-black p-4 font-sans">
       <div className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 p-8 relative overflow-hidden">
+        
+        {/* Logout Button */}
+        <button 
+          onClick={handleLogout}
+          className="absolute top-5 right-5 px-3 py-1.5 text-sm font-semibold text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all z-20"
+        >
+          Logout
+        </button>
+
         <div className="relative z-10 text-center">
           <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
