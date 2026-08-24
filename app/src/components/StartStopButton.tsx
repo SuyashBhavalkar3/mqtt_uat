@@ -42,6 +42,10 @@ export default function StartStopButton() {
 
     socket.on('connect', () => {
       console.log(`[Socket.io] ✅ Connected! Socket ID: ${socket.id}`);
+      // Join Frappe's site room — required to receive frappe.publish_realtime broadcasts.
+      // Without this, only authenticated Desk users (with session cookie) receive events.
+      socket.emit('login', { user: 'Guest' });
+      console.log(`[Socket.io] Emitted login as Guest to join Frappe site room.`);
     });
 
     // Catch-all — will show any event name coming from server
