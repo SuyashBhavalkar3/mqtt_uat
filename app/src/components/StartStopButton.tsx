@@ -22,21 +22,33 @@ export default function StartStopButton() {
     const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://uaterp.gbru.in';
     const deviceId = localStorage.getItem('target_device_id') || 'test_motor_01';
 
+    console.log(`[Socket.io] Attempting connection to: ${baseURL}`);
+    console.log(`[Socket.io] Watching for device_id: ${deviceId}`);
+
     const socket = io(baseURL, {
       path: '/socket.io',
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'], // fallback to polling if websocket fails
     });
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log('[Socket.io] Connected to Frappe realtime server');
+      console.log(`[Socket.io] ✅ Connected! Socket ID: ${socket.id}`);
+      console.log(`[Socket.io] Transport used: ${socket.io.engine.transport.name}`);
+    });
+
+    // 🔍 CATCH-ALL: logs EVERY event from the server — helps find the real event name
+    socket.onAny((eventName, ...args) => {
+      console.log(`[Socket.io] 📨 Event received: "${eventName}"`, args);
     });
 
     socket.on('smartiot_device_status_update', (data: DeviceStatusEvent) => {
-      // Only handle events for the currently connected device
-      if (data.device_id !== deviceId) return;
+      console.log(`[Socket.io] 🎯 Matched "smartiot_device_status_update":`, data);
 
-      console.log('[Socket.io] Real-time status update received:', data);
+      // Only handle events for the currently connected device
+      if (data.device_id !== deviceId) {
+        console.warn(`[Socket.io] ⚠️ device_id mismatch — got "${data.device_id}", expected "${deviceId}". Ignoring.`);
+        return;
+      }
 
       const isOn = data.status === 'On';
       const formattedTime = new Date(data.status_last_updated).toLocaleTimeString();
@@ -48,18 +60,20 @@ export default function StartStopButton() {
       );
     });
 
-    socket.on('disconnect', () => {
-      console.log('[Socket.io] Disconnected from Frappe realtime server');
+    socket.on('disconnect', (reason) => {
+      console.warn(`[Socket.io] ❌ Disconnected. Reason: ${reason}`);
     });
 
     socket.on('connect_error', (err) => {
-      console.error('[Socket.io] Connection error:', err.message);
+      console.error(`[Socket.io] 🔴 Connection error: ${err.message}`);
     });
 
     return () => {
+      console.log('[Socket.io] Cleaning up — disconnecting socket.');
       socket.disconnect();
     };
   }, []);
+
 
   // Send MQTT command to the ERP using the saved API keys
   const sendMqttRequest = async (action: 'start' | 'stop') => {
