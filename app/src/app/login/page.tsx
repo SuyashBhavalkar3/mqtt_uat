@@ -18,8 +18,8 @@ export default function LoginPage() {
     try {
       // NOTE: You can define NEXT_PUBLIC_API_BASE_URL in your .env.local file
       // e.g. NEXT_PUBLIC_API_BASE_URL=https://your-frappe-server.com
-      const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'; 
-      
+      const baseURL = "https://proderp.gbru.in";
+
       const response = await fetch(`${baseURL}/api/method/warrior.login.api.login_user`, {
         method: 'POST',
         headers: {
@@ -43,7 +43,7 @@ export default function LoginPage() {
           localStorage.setItem('api_key', keyDetails.api_key);
           localStorage.setItem('api_secret', keyDetails.api_secret);
         }
-        
+
         // Store complete user data
         localStorage.setItem('user_info', JSON.stringify(data.message.data));
 
@@ -67,7 +67,7 @@ export default function LoginPage() {
         {/* Decorative background gradients for premium feel */}
         <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500 rounded-full blur-[80px] opacity-20 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-40 h-40 bg-purple-500 rounded-full blur-[80px] opacity-20 pointer-events-none"></div>
-        
+
         <div className="relative z-10">
           <div className="mb-10 text-center">
             <h1 className="text-3xl font-bold text-zinc-900 dark:text-white tracking-tight mb-3">Welcome back</h1>
@@ -83,8 +83,8 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">User ID (Email)</label>
-              <input 
-                type="email" 
+              <input
+                type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -92,11 +92,11 @@ export default function LoginPage() {
                 placeholder="name@example.com"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Password</label>
-              <input 
-                type="password" 
+              <input
+                type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
