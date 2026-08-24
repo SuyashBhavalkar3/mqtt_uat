@@ -14,7 +14,7 @@ export default function DeviceSelectionPage() {
       setError("Please enter a device ID.");
       return;
     }
-    
+
     setError('');
     // Store the device ID so the button page can use it for MQTT interactions
     localStorage.setItem('target_device_id', deviceId);
@@ -49,17 +49,17 @@ export default function DeviceSelectionPage() {
           </div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Connect Device</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">Enter your IoT device ID to establish a connection.</p>
-          
+
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium animate-in fade-in slide-in-from-top-2">
               {error}
             </div>
           )}
-          
+
           <form onSubmit={handleEnter} className="space-y-6">
             <div>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 required
                 value={deviceId}
                 onChange={(e) => setDeviceId(e.target.value)}
@@ -67,7 +67,7 @@ export default function DeviceSelectionPage() {
                 placeholder="e.g. DEV-8374"
               />
             </div>
-            
+
             <button
               type="submit"
               disabled={!deviceId.trim()}
