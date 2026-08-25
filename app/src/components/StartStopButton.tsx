@@ -19,7 +19,7 @@ export default function StartStopButton() {
       const apiSecret = localStorage.getItem('api_secret');
       const deviceId = localStorage.getItem('target_device_id') || 'test_motor_01';
       
-      const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://uaterp.gbru.in';
+      const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://uatsmart.gbru.in';
       const endpoint = `${baseURL}/api/method/shoption_chatbot.mqtt.send_device_command`;
       
       console.log(`[MQTT] API URL: ${endpoint}`);
