@@ -103,11 +103,12 @@ export default function StartStopButton() {
     }
   };
 
-  // Stream logs in real-time: poll every 3s while panel is open
+  // Stream logs: socket doc_update is primary trigger; poll every 5s as fallback
   useEffect(() => {
     if (logOpen) {
       fetchLogs(); // immediate fetch on open
-      logPollRef.current = setInterval(fetchLogs, 3000);
+      logPollRef.current = setInterval(fetchLogs, 5000); // fallback if socket misses
+
     } else {
       if (logPollRef.current) {
         clearInterval(logPollRef.current);
@@ -136,18 +137,33 @@ export default function StartStopButton() {
     socket.on('connect', () => {
       console.log(`[Socket.io] ✅ Connected! Socket ID: ${socket.id}`);
       setSocketConnected(true);
+
+      // Join Frappe site room (to receive general broadcasts)
       socket.emit('login', { user: 'Guest' });
+
+      // Join the specific IOT Device document room so we receive
+      // doc_update events fired by frappe.publish_realtime on the backend
+      socket.emit('join_doc', { doctype: 'IOT Device', docname: currentDeviceId });
+      console.log(`[Socket.io] Joined doc room: IOT Device / ${currentDeviceId}`);
     });
 
     socket.onAny((eventName, ...args) => {
       console.log(`[Socket.io] 📨 Event: "${eventName}"`, args);
     });
 
+    // doc_update fires on EVERY command dispatch AND every hardware status update
+    // (both call frappe.publish_realtime with doctype/docname in MQTT.py)
+    socket.on('doc_update', (data: { doctype: string; docname: string }) => {
+      if (data.doctype === 'IOT Device' && data.docname === currentDeviceId) {
+        console.log(`[Socket.io] 📋 doc_update for ${currentDeviceId} — refreshing logs`);
+        fetchLogs();
+      }
+    });
+
     socket.on('smartiot_device_status_update', (data: DeviceStatusEvent) => {
       if (data.device_id !== currentDeviceId) return;
-      console.log(`[Socket.io] 🎯 Real-time update:`, data);
+      console.log(`[Socket.io] 🎯 Real-time status update:`, data);
       applyStatusUpdate(data.status, data.status_last_updated, data.device_id, 'socket');
-      // Refresh logs when a real-time status comes in
       fetchLogs();
     });
 
@@ -163,6 +179,7 @@ export default function StartStopButton() {
 
     return () => { socket.disconnect(); };
   }, []);
+
 
   // ── Shared status update ───────────────────────────────────────────────
   const applyStatusUpdate = (
