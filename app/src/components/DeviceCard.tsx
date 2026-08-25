@@ -33,7 +33,7 @@ interface DeviceCardProps {
 
 export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
   const [status, setStatus] = useState<'stopped' | 'started'>('stopped');
-  const [loading, setLoading] = useState<boolean>(true); // initially loading status
+  const [loading, setLoading] = useState<boolean>(false); // false until a command is sent
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastIsSuccess, setToastIsSuccess] = useState<boolean>(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -155,11 +155,12 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
     const formatted = new Date(lastUpdatedAt).toLocaleTimeString();
     setStatus(isOn ? 'started' : 'stopped');
     setLastUpdated(new Date(lastUpdatedAt).toLocaleString());
-    
+    setLoading(false); // always clear loading — handles socket, poll, and init
+
     if (source !== 'init') {
       showToast(`${deviceId} → ${rawStatus}  •  ${formatted}`, isOn);
     }
-    
+
     if (source === 'poll') stopPolling();
   };
 
@@ -195,11 +196,11 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
         );
         const data: DeviceStatusResponse = await res.json();
         const msg = data.message;
-        const updatedAt = new Date(msg.status_last_updated).getTime();
-        const sentAt = new Date(snapshotTime).getTime();
-        if (msg.current_status === expectedAction && updatedAt >= sentAt) {
+        // Only check status match — skip timestamp comparison to avoid
+        // server/client clock skew causing the poll to never resolve
+        if (msg.current_status === expectedAction) {
           applyStatusUpdate(msg.current_status, msg.status_last_updated, 'poll');
-          fetchLogs(); 
+          fetchLogs();
         }
       } catch (err) {
         console.error(`[Poll ${deviceId}]`, err);
