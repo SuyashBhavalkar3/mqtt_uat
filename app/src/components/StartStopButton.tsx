@@ -55,6 +55,7 @@ export default function StartStopButton() {
 
   const socketRef = useRef<Socket | null>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const logPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const router = useRouter();
 
   // ── Load session info ─────────────────────────────────────────────────
@@ -102,15 +103,24 @@ export default function StartStopButton() {
     }
   };
 
-  // Fetch logs on mount and whenever log panel opens
+  // Stream logs in real-time: poll every 3s while panel is open
   useEffect(() => {
-    if (logOpen) fetchLogs();
+    if (logOpen) {
+      fetchLogs(); // immediate fetch on open
+      logPollRef.current = setInterval(fetchLogs, 3000);
+    } else {
+      if (logPollRef.current) {
+        clearInterval(logPollRef.current);
+        logPollRef.current = null;
+      }
+    }
+    return () => {
+      if (logPollRef.current) {
+        clearInterval(logPollRef.current);
+        logPollRef.current = null;
+      }
+    };
   }, [logOpen]);
-
-  // Auto-scroll to bottom (newest = top, no need) — but keep ref for future
-  useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [logs]);
 
   // ── Socket.io ──────────────────────────────────────────────────────────
   useEffect(() => {
