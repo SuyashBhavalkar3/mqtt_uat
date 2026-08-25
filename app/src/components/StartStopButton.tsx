@@ -70,7 +70,8 @@ export default function StartStopButton() {
     setApiKey(storedApiKey);
   }, []);
 
-  // ── Fetch device logs from Frappe ──────────────────────────────────────
+  // ── Fetch device logs via get_device_logs API ─────────────────────────
+  // Triggered by: socket doc_update event (instant) + 5s fallback poll
   const fetchLogs = async () => {
     const apiKeyVal = localStorage.getItem('api_key');
     const apiSecretVal = localStorage.getItem('api_secret');
@@ -79,23 +80,26 @@ export default function StartStopButton() {
 
     setLogsLoading(true);
     try {
-      // Fetch the full IOT Device doc — child table (logs) is included automatically
       const res = await fetch(
-        `${baseURL}/api/resource/IOT Device/${encodeURIComponent(currentDeviceId)}`,
+        `${baseURL}/api/method/shoption_chatbot.mqtt.get_device_logs`,
         {
+          method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Authorization': `token ${apiKeyVal}:${apiSecretVal}`,
           },
+          body: JSON.stringify({ device_id: currentDeviceId }),
         }
       );
       const data = await res.json();
-      const rawLogs: DeviceLog[] = data?.message?.logs || data?.data?.logs || [];
-      // Sort newest first
+      // Response: { message: DeviceLog[] }  (array directly under message)
+      const rawLogs: DeviceLog[] = Array.isArray(data?.message) ? data.message : [];
+      // Already newest-first from backend, but sort defensively
       const sorted = [...rawLogs].sort(
         (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
-      setLogs(sorted.slice(0, 50)); // keep last 50
+      setLogs(sorted.slice(0, 50));
     } catch (err) {
       console.error('[Logs] Failed to fetch:', err);
     } finally {
@@ -103,25 +107,12 @@ export default function StartStopButton() {
     }
   };
 
-  // Stream logs: socket doc_update is primary trigger; poll every 5s as fallback
-  useEffect(() => {
-    if (logOpen) {
-      fetchLogs(); // immediate fetch on open
-      logPollRef.current = setInterval(fetchLogs, 5000); // fallback if socket misses
 
-    } else {
-      if (logPollRef.current) {
-        clearInterval(logPollRef.current);
-        logPollRef.current = null;
-      }
-    }
-    return () => {
-      if (logPollRef.current) {
-        clearInterval(logPollRef.current);
-        logPollRef.current = null;
-      }
-    };
+  // Initial log fetch when panel opens — socket handles all subsequent updates
+  useEffect(() => {
+    if (logOpen) fetchLogs();
   }, [logOpen]);
+
 
   // ── Socket.io ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -151,12 +142,22 @@ export default function StartStopButton() {
       console.log(`[Socket.io] 📨 Event: "${eventName}"`, args);
     });
 
-    // doc_update fires on EVERY command dispatch AND every hardware status update
-    // (both call frappe.publish_realtime with doctype/docname in MQTT.py)
+    // ── device_logs_update ────────────────────────────────────────────
+    // Backend publishes this event (via frappe.publish_realtime) with the
+    // full log list whenever logs change — no HTTP fetch needed.
+    socket.on('device_logs_update', (data: { device_id: string; logs: DeviceLog[] }) => {
+      if (data.device_id !== currentDeviceId) return;
+      console.log(`[Socket.io] 📋 device_logs_update received (${data.logs?.length} entries)`);
+      const sorted = [...(data.logs || [])].sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      setLogs(sorted.slice(0, 50));
+    });
+
+    // doc_update — used only for status indicator, logs come via device_logs_update
     socket.on('doc_update', (data: { doctype: string; docname: string }) => {
       if (data.doctype === 'IOT Device' && data.docname === currentDeviceId) {
-        console.log(`[Socket.io] 📋 doc_update for ${currentDeviceId} — refreshing logs`);
-        fetchLogs();
+        console.log(`[Socket.io] 📋 doc_update for ${currentDeviceId}`);
       }
     });
 
@@ -164,7 +165,6 @@ export default function StartStopButton() {
       if (data.device_id !== currentDeviceId) return;
       console.log(`[Socket.io] 🎯 Real-time status update:`, data);
       applyStatusUpdate(data.status, data.status_last_updated, data.device_id, 'socket');
-      fetchLogs();
     });
 
     socket.on('disconnect', (reason) => {
@@ -476,8 +476,9 @@ export default function StartStopButton() {
                   Fetching logs...
                 </div>
               ) : logs.length === 0 ? (
-                <div className="flex items-center justify-center py-10 text-zinc-400 text-sm">
-                  No logs found for this device.
+                <div className="flex flex-col items-center justify-center py-10 gap-1 text-center">
+                  <span className="text-xl">📭</span>
+                  <p className="text-sm text-zinc-400">No logs yet for this device.</p>
                 </div>
               ) : (
                 logs.map((log, idx) => (
