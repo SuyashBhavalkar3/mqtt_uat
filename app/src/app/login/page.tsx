@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -16,11 +15,13 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // NOTE: You can define NEXT_PUBLIC_API_BASE_URL in your .env.local file
-      // e.g. NEXT_PUBLIC_API_BASE_URL=https://your-frappe-server.com
-      const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://uatsmart.gbru.in';
+      if (phone.replace(/[^0-9]/g, '').length < 10) {
+        setError('Please enter a valid phone number (at least 10 digits).');
+        setLoading(false);
+        return;
+      }
 
-      const response = await fetch(`${baseURL}/api/method/warrior.login.api.login_user`, {
+      const response = await fetch(`/api/method/smart_gbru.apis.registration.send_otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -29,33 +30,33 @@ export default function LoginPage() {
           'X-API-SECRET': process.env.NEXT_PUBLIC_X_API_SECRET || '',
         },
         body: JSON.stringify({
-          user_id: email,
-          password: password,
+          mobile_no: phone
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.message?.status) {
-        // Successfully authenticated! Extract key details.
-        const keyDetails = data.message.data.key_details;
-        if (keyDetails) {
-          localStorage.setItem('api_key', keyDetails.api_key);
-          localStorage.setItem('api_secret', keyDetails.api_secret);
-        }
+      if (response.ok && data.message?.status !== false) {
+        // Store API Keys from environment variables for the MQTT commands to work later
+        localStorage.setItem('api_key', process.env.NEXT_PUBLIC_X_API_KEY || '');
+        localStorage.setItem('api_secret', process.env.NEXT_PUBLIC_X_API_SECRET || '');
+        
+        // Store user phone
+        localStorage.setItem('user_info', JSON.stringify({ 
+          user_id: phone, 
+          full_name: 'User', 
+          phone: phone 
+        }));
 
-        // Store complete user data
-        localStorage.setItem('user_info', JSON.stringify(data.message.data));
-
-        // Redirect to the device selection page
-        router.push('/device_add');
+        // OTP sent successfully. 
+        // Redirect to the OTP verification page
+        router.push('/verify_otp');
       } else {
-        // Display any error messages that come back from the server
-        setError(data.message?.message || 'Invalid credentials or server error.');
+        setError(data.message?.message || 'Failed to send OTP.');
       }
     } catch (err) {
       console.error(err);
-      setError('Network error. Please make sure your API server is running and reachable.');
+      setError('An error occurred while connecting to the server.');
     } finally {
       setLoading(false);
     }
@@ -70,8 +71,8 @@ export default function LoginPage() {
 
         <div className="relative z-10">
           <div className="mb-10 text-center">
-            <h1 className="text-3xl font-bold text-zinc-900 dark:text-white tracking-tight mb-3">Welcome back</h1>
-            <p className="text-zinc-500 dark:text-zinc-400">Sign in to your account to continue</p>
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-white tracking-tight mb-3">Welcome</h1>
+            <p className="text-zinc-500 dark:text-zinc-400">Enter your phone number to continue</p>
           </div>
 
           {error && (
@@ -82,26 +83,14 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">User ID (Email)</label>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Phone Number</label>
               <input
-                type="email"
+                type="tel"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 border-2 border-transparent focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-0 text-zinc-900 dark:text-white transition-all outline-none"
-                placeholder="name@example.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 border-2 border-transparent focus:bg-white dark:focus:bg-zinc-900 focus:border-blue-500 focus:ring-0 text-zinc-900 dark:text-white transition-all outline-none"
-                placeholder="••••••••"
+                placeholder="+1 234 567 8900"
               />
             </div>
 
@@ -113,10 +102,10 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                  Authenticating...
+                  Continuing...
                 </>
               ) : (
-                'Sign In'
+                'Continue'
               )}
             </button>
           </form>
