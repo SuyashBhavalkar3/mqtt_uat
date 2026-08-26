@@ -73,10 +73,30 @@ export default function VerifyOtpPage() {
 
         if (detailsResponse.ok && detailsData.message?.status === true) {
           const userData = detailsData.message.data;
+          const apiKey = userData.key_details.api_key;
+          const apiSecret = userData.key_details.api_secret;
+
+          // Fetch user connected devices
+          try {
+            const devicesResponse = await fetch(`/api/method/smart_gbru.mqtt.get_user_connected_devices`, {
+              method: 'POST',
+              headers: {
+                'Accept': 'application/json',
+                'Authorization': `token ${apiKey}:${apiSecret}`
+              }
+            });
+            const devicesData = await devicesResponse.json();
+            if (devicesResponse.ok && Array.isArray(devicesData.message)) {
+               const deviceIds = devicesData.message.map((d: any) => d.device_id.toLowerCase());
+               localStorage.setItem('added_devices', JSON.stringify(deviceIds));
+            }
+          } catch (deviceErr) {
+            console.error('Failed to fetch connected devices:', deviceErr);
+          }
           
           // Store API credentials and user info in localStorage for the dashboard
-          localStorage.setItem('api_key', userData.key_details.api_key);
-          localStorage.setItem('api_secret', userData.key_details.api_secret);
+          localStorage.setItem('api_key', apiKey);
+          localStorage.setItem('api_secret', apiSecret);
           localStorage.setItem('user_info', JSON.stringify({
             full_name: userData.full_name,
             email: userData.email,

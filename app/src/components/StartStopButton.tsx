@@ -23,30 +23,48 @@ export default function StartStopButton() {
   const socketRef = useRef<Socket | null>(null);
   const router = useRouter();
 
+  const [loadingDevices, setLoadingDevices] = useState<boolean>(true);
+
   // ── Load session info ─────────────────────────────────────────────────
   useEffect(() => {
     const storedUser = localStorage.getItem('user_info');
     const storedApiKey = localStorage.getItem('api_key') || '';
-    
-    // Legacy support: if there was a single target_device_id, migrate it to the array
-    const legacyDevice = localStorage.getItem('target_device_id');
-    const storedDevices = localStorage.getItem('added_devices');
-    
-    let devices: string[] = [];
-    if (storedDevices) {
-      try { devices = JSON.parse(storedDevices); } catch { /* ignore */ }
-    } else if (legacyDevice) {
-      devices = [legacyDevice];
-      localStorage.setItem('added_devices', JSON.stringify(devices));
-      localStorage.removeItem('target_device_id');
-    }
+    const storedApiSecret = localStorage.getItem('api_secret') || '';
 
     if (storedUser) {
       try { setUserInfo(JSON.parse(storedUser)); } catch { /* ignore */ }
     }
     
-    setDeviceIds(devices);
     setApiKey(storedApiKey);
+
+    const fetchDevices = async () => {
+      try {
+        const res = await fetch(`/api/method/smart_gbru.mqtt.get_user_connected_devices`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `token ${storedApiKey}:${storedApiSecret}`,
+          }
+        });
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.message)) {
+          const ids = data.message.map((d: any) => d.device_id.toLowerCase());
+          setDeviceIds(ids);
+          localStorage.setItem('added_devices', JSON.stringify(ids));
+        }
+      } catch (err) {
+        console.error('Failed to fetch devices', err);
+        // Fallback to local storage if network fails
+        const storedDevices = localStorage.getItem('added_devices');
+        if (storedDevices) {
+          try { setDeviceIds(JSON.parse(storedDevices)); } catch { /* ignore */ }
+        }
+      } finally {
+        setLoadingDevices(false);
+      }
+    };
+
+    fetchDevices();
   }, []);
 
   // ── Socket.io ──────────────────────────────────────────────────────────
@@ -279,7 +297,15 @@ export default function StartStopButton() {
       </div>
 
       {/* ── Main Content Area (Cards Grid) ── */}
-      {deviceIds.length === 0 ? (
+      {loadingDevices ? (
+        <div className="w-full h-64 flex flex-col items-center justify-center mt-10">
+          <svg className="animate-spin w-8 h-8 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p className="text-zinc-500 font-medium">Fetching connected motors...</p>
+        </div>
+      ) : deviceIds.length === 0 ? (
         <div className="w-full h-64 flex flex-col items-center justify-center border-2 border-dashed border-zinc-300 dark:border-zinc-800 rounded-3xl mt-10">
           <svg className="w-12 h-12 text-zinc-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
           <p className="text-zinc-500 font-medium">No devices added yet.</p>
