@@ -81,40 +81,22 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
     fetchInitialStatus();
   }, [deviceId]);
 
-  // ── Fetch device logs ─────────────────────────────────────────────────
-  const fetchLogs = async () => {
-    const apiKeyVal = localStorage.getItem('api_key');
-    const apiSecretVal = localStorage.getItem('api_secret');
-
-    setLogsLoading(true);
-    try {
-      const res = await fetch(
-        `/api/method/smart_gbru.apis.MQTT.MQTT.get_device_logs`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': `token ${apiKeyVal}:${apiSecretVal}`,
-          },
-          body: JSON.stringify({ device_id: deviceId }),
-        }
-      );
-      const data = await res.json();
-      const rawLogs: DeviceLog[] = Array.isArray(data?.message) ? data.message : [];
-      const sorted = [...rawLogs].sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
-      setLogs(sorted.slice(0, 50));
-    } catch (err) {
-      console.error(`[Logs ${deviceId}] Failed to fetch:`, err);
-    } finally {
-      setLogsLoading(false);
+  // ── Request logs via socket ────────────────────────────────────────────
+  // Emits 'get_device_logs' on the socket; backend handles it and responds
+  // by calling frappe.publish_realtime(event='device_logs_update', message={device_id, logs})
+  // which is received by the onLogsUpdate listener below.
+  const requestLogs = () => {
+    if (!socket) {
+      console.warn(`[Logs ${deviceId}] Socket not available for log request`);
+      return;
     }
+    setLogsLoading(true);
+    console.log(`[Logs ${deviceId}] Emitting get_device_logs via socket`);
+    socket.emit('get_device_logs', { device_id: deviceId });
   };
 
   useEffect(() => {
-    if (logOpen) fetchLogs();
+    if (logOpen) requestLogs();
   }, [logOpen, deviceId]);
 
   // ── Socket.io Listeners ────────────────────────────────────────────────
@@ -132,11 +114,12 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
 
     const onLogsUpdate = (data: { device_id: string; logs: DeviceLog[] }) => {
       if (data.device_id === deviceId) {
-        console.log(`[Socket.io ${deviceId}] Logs update received`);
+        console.log(`[Socket.io ${deviceId}] Logs received (${data.logs?.length} entries)`);
         const sorted = [...(data.logs || [])].sort(
           (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         setLogs(sorted.slice(0, 50));
+        setLogsLoading(false);
       }
     };
 
@@ -200,7 +183,7 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
         // server/client clock skew causing the poll to never resolve
         if (msg.current_status === expectedAction) {
           applyStatusUpdate(msg.current_status, msg.status_last_updated, 'poll');
-          fetchLogs();
+          requestLogs();
         }
       } catch (err) {
         console.error(`[Poll ${deviceId}]`, err);
@@ -242,7 +225,7 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
       if (response.ok && data.message?.status === 'Success') {
         showToast('Command sent — waiting for hardware...', true);
         startPolling(action === 'start' ? 'On' : 'Off', commandSentAt);
-        setTimeout(fetchLogs, 1500);
+        setTimeout(requestLogs, 1500);
       } else {
         showToast(`Error: ${data.message?.message || 'Failed to send command'}`, false);
         setLoading(false);
@@ -334,7 +317,7 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
         <div className="w-full mt-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden flex flex-col h-56 animate-in fade-in zoom-in-95 duration-200 text-left">
           <div className="flex justify-between items-center px-3 py-2 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800">
             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Live Logs</span>
-            <button onClick={fetchLogs} className="text-zinc-400 hover:text-blue-500 transition-colors">
+            <button onClick={requestLogs} title="Refresh logs" className="text-zinc-400 hover:text-blue-500 transition-colors">
               <svg className={`w-3.5 h-3.5 ${logsLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
