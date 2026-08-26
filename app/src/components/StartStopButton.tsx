@@ -71,9 +71,10 @@ export default function StartStopButton() {
   useEffect(() => {
     const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://uatsmart.gbru.in';
 
+    // Connect directly to the external domain, explicitly forcing websocket transport
     const socket = io(baseURL, {
       path: '/socket.io',
-      transports: ['websocket', 'polling'],
+      transports: ["websocket"]
     });
     socketRef.current = socket;
     setSocketInstance(socket);
@@ -81,20 +82,6 @@ export default function StartStopButton() {
     socket.on('connect', () => {
       console.log(`[Socket.io] ✅ Connected! Socket ID: ${socket.id}`);
       setSocketConnected(true);
-
-      // Join Frappe user room (to receive targeted broadcasts for this user)
-      let socketUser = 'Guest';
-      try {
-        const storedUser = localStorage.getItem('user_info');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          socketUser = parsedUser.email || parsedUser.user_id || 'Guest';
-        }
-      } catch (e) {
-        // ignore
-      }
-      console.log(`[Socket.io] Joining user room as: ${socketUser}`);
-      socket.emit('login', { user: socketUser });
     });
     
     socket.on('disconnect', (reason) => {
@@ -105,6 +92,14 @@ export default function StartStopButton() {
     socket.on('connect_error', (err) => {
       console.error(`[Socket.io] 🔴 Error: ${err.message}`);
       setSocketConnected(false);
+    });
+
+    socket.on('smartiot_device_status_update', (data) => {
+      console.log(`[Socket.io GLOBAL] Received smartiot_device_status_update:`, data);
+    });
+
+    socket.onAny((eventName, ...args) => {
+      console.log(`[Socket.io GLOBAL - ANY] Event: ${eventName}`, args);
     });
 
     return () => { socket.disconnect(); };

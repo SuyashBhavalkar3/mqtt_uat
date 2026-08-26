@@ -123,10 +123,10 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
 
     // We don't join_doc here, the Dashboard joins the doc for all devices.
     
-    const onStatusUpdate = (data: DeviceStatusEvent) => {
-      if (data.device_id === deviceId) {
+    const onStatusUpdate = (data: any) => {
+      if (data.device_id && data.device_id.toLowerCase() === deviceId.toLowerCase()) {
         console.log(`[Socket.io ${deviceId}] Real-time status:`, data);
-        applyStatusUpdate(data.status, data.status_last_updated, 'socket');
+        applyStatusUpdate(data.status, data.status_last_updated || new Date().toISOString(), 'socket');
       }
     };
 
