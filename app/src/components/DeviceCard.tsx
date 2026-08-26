@@ -122,7 +122,7 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
     if (!socket) return;
 
     // We don't join_doc here, the Dashboard joins the doc for all devices.
-    
+
     const onStatusUpdate = (data: any) => {
       if (data.device_id && data.device_id.toLowerCase() === deviceId.toLowerCase()) {
         console.log(`[Socket.io ${deviceId}] Real-time status:`, data);
@@ -269,9 +269,8 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
 
       {/* Toast Overlay */}
       <div
-        className={`absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg shadow-lg text-white transition-all duration-300 text-xs font-semibold z-10 flex items-center gap-1.5 whitespace-nowrap ${
-          toastMessage ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0 pointer-events-none'
-        } ${toastIsSuccess ? 'bg-green-500' : 'bg-red-500'}`}
+        className={`absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg shadow-lg text-white transition-all duration-300 text-xs font-semibold z-10 flex items-center gap-1.5 whitespace-nowrap ${toastMessage ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0 pointer-events-none'
+          } ${toastIsSuccess ? 'bg-green-500' : 'bg-red-500'}`}
       >
         <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${toastIsSuccess ? 'bg-green-200' : 'bg-red-200'}`} />
         {toastMessage}
@@ -299,35 +298,34 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
         <button
           onClick={handleStart}
           disabled={loading || status === 'started'}
-          className={`flex-1 py-4 rounded-2xl font-bold text-sm sm:text-base transition-all duration-300 ${
-            status === 'started'
+          className={`flex-1 py-4 rounded-2xl font-bold text-sm sm:text-base transition-all duration-300 ${status === 'started'
               ? 'bg-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.4)] scale-105'
               : 'bg-zinc-100 text-zinc-600 hover:bg-green-100 hover:text-green-600 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed'
-          }`}
+            }`}
         >
           START
         </button>
         <button
           onClick={handleStop}
           disabled={loading || status === 'stopped'}
-          className={`flex-1 py-4 rounded-2xl font-bold text-sm sm:text-base transition-all duration-300 ${
-            status === 'stopped'
+          className={`flex-1 py-4 rounded-2xl font-bold text-sm sm:text-base transition-all duration-300 ${status === 'stopped'
               ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] scale-105'
               : 'bg-zinc-100 text-zinc-600 hover:bg-red-100 hover:text-red-600 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed'
-          }`}
+            }`}
         >
           STOP
         </button>
       </div>
 
       {/* Logs Toggle */}
-      <button 
+      <button
         onClick={() => setLogOpen(!logOpen)}
         className="w-full mt-6 flex items-center justify-center gap-2 py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
         {logOpen ? 'Hide Logs' : 'View Logs'}
       </button>
+
 
       {/* Inline Log Panel */}
       {logOpen && (
@@ -340,7 +338,7 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
               </svg>
             </button>
           </div>
-          
+
           {/* Table Header */}
           <div className="grid grid-cols-[2fr_1fr_1.5fr] gap-3 px-3 py-2 border-b border-zinc-200 dark:border-zinc-700 bg-white/50 dark:bg-zinc-800/80">
             <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Status</span>
@@ -350,9 +348,9 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
 
           <div className="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60">
             {logsLoading && logs.length === 0 ? (
-               <div className="flex items-center justify-center h-full text-xs text-zinc-400">Loading logs...</div>
+              <div className="flex items-center justify-center h-full text-xs text-zinc-400">Loading logs...</div>
             ) : logs.length === 0 ? (
-               <div className="flex items-center justify-center h-full text-xs text-zinc-400">No logs yet.</div>
+              <div className="flex items-center justify-center h-full text-xs text-zinc-400">No logs yet.</div>
             ) : (
               logs.map((log, idx) => (
                 <div key={idx} className="grid grid-cols-[2fr_1fr_1.5fr] gap-3 px-3 py-2.5 hover:bg-white dark:hover:bg-zinc-700/30 transition-colors items-center">
@@ -365,12 +363,12 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
                       {log.message}
                     </span>
                   </div>
-                  
+
                   {/* Time Column */}
                   <span className="text-[10px] text-zinc-500 font-mono text-center shrink-0">
                     {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </span>
-                  
+
                   {/* Triggered By Column */}
                   <div className="text-[10px] text-zinc-500 text-right truncate" title={log.triggered_by || 'System'}>
                     {log.triggered_by ? (
