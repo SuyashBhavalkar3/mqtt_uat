@@ -57,7 +57,7 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
     try {
       const apiKeyVal = localStorage.getItem('api_key') || '';
       const apiSecretVal = localStorage.getItem('api_secret') || '';
-      const res = await fetch(`/api/method/smart_gbru.apis.MQTT.MQTT.get_device_status`, {
+      const res = await fetch(`/api/method/smart_gbru.mqtt.get_status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,9 +66,9 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
         },
         body: JSON.stringify({ device_id: deviceId }),
       });
-      const data: DeviceStatusResponse = await res.json();
+      const data = await res.json();
       if (res.ok && data.message) {
-        applyStatusUpdate(data.message.current_status, data.message.status_last_updated, 'init');
+        applyStatusUpdate(data.message.status, data.message.last_updated, 'init');
       }
     } catch (err) {
       console.error(`[Init] Failed to fetch status for ${deviceId}:`, err);
@@ -183,7 +183,7 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
       attempts++;
       try {
         const res = await fetch(
-          `/api/method/smart_gbru.apis.MQTT.MQTT.get_device_status`,
+          `/api/method/smart_gbru.mqtt.get_status`,
           {
             method: 'POST',
             headers: {
@@ -194,12 +194,12 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
             body: JSON.stringify({ device_id: deviceId }),
           }
         );
-        const data: DeviceStatusResponse = await res.json();
+        const data = await res.json();
         const msg = data.message;
         // Only check status match — skip timestamp comparison to avoid
         // server/client clock skew causing the poll to never resolve
-        if (msg.current_status === expectedAction) {
-          applyStatusUpdate(msg.current_status, msg.status_last_updated, 'poll');
+        if (msg.status === expectedAction) {
+          applyStatusUpdate(msg.status, msg.last_updated, 'poll');
           fetchLogs();
         }
       } catch (err) {
@@ -226,7 +226,7 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
       const commandSentAt = new Date().toISOString();
 
       const response = await fetch(
-        `/api/method/smart_gbru.apis.MQTT.MQTT.send_device_command`,
+        `/api/method/smart_gbru.mqtt.send_command`,
         {
           method: 'POST',
           headers: {

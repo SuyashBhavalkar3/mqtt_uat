@@ -39,8 +39,8 @@ export default function StartStopButton() {
 
     const fetchDevices = async () => {
       try {
-        const res = await fetch(`/api/method/smart_gbru.mqtt.get_user_connected_devices`, {
-          method: 'POST',
+        const res = await fetch(`/api/method/smart_gbru.mqtt.get_devices`, {
+          method: 'GET',
           headers: {
             'Accept': 'application/json',
             'Authorization': `token ${storedApiKey}:${storedApiSecret}`,

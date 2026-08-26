@@ -78,8 +78,8 @@ export default function VerifyOtpPage() {
 
           // Fetch user connected devices
           try {
-            const devicesResponse = await fetch(`/api/method/smart_gbru.mqtt.get_user_connected_devices`, {
-              method: 'POST',
+            const devicesResponse = await fetch(`/api/method/smart_gbru.mqtt.get_devices`, {
+              method: 'GET', // Or POST, trying GET this time or just standard fetch
               headers: {
                 'Accept': 'application/json',
                 'Authorization': `token ${apiKey}:${apiSecret}`
