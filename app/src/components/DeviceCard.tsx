@@ -331,32 +331,57 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
 
       {/* Inline Log Panel */}
       {logOpen && (
-        <div className="w-full mt-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden flex flex-col h-48 animate-in fade-in zoom-in-95 duration-200 text-left">
+        <div className="w-full mt-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden flex flex-col h-56 animate-in fade-in zoom-in-95 duration-200 text-left">
           <div className="flex justify-between items-center px-3 py-2 border-b border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800">
             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Live Logs</span>
-            <button onClick={fetchLogs} className="text-zinc-400 hover:text-blue-500">
-              <svg className={`w-3 h-3 ${logsLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button onClick={fetchLogs} className="text-zinc-400 hover:text-blue-500 transition-colors">
+              <svg className={`w-3.5 h-3.5 ${logsLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800">
+          
+          {/* Table Header */}
+          <div className="grid grid-cols-[2fr_1fr_1.5fr] gap-3 px-3 py-2 border-b border-zinc-200 dark:border-zinc-700 bg-white/50 dark:bg-zinc-800/80">
+            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Status</span>
+            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider text-center">Time</span>
+            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider text-right">Triggered By</span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60">
             {logsLoading && logs.length === 0 ? (
                <div className="flex items-center justify-center h-full text-xs text-zinc-400">Loading logs...</div>
             ) : logs.length === 0 ? (
                <div className="flex items-center justify-center h-full text-xs text-zinc-400">No logs yet.</div>
             ) : (
               logs.map((log, idx) => (
-                <div key={idx} className="px-3 py-2 hover:bg-white dark:hover:bg-zinc-700/30 transition-colors">
-                  <div className="flex items-center justify-between mb-1">
+                <div key={idx} className="grid grid-cols-[2fr_1fr_1.5fr] gap-3 px-3 py-2.5 hover:bg-white dark:hover:bg-zinc-700/30 transition-colors items-center">
+                  {/* Status Column */}
+                  <div className="flex flex-col items-start gap-1 overflow-hidden">
                     <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm ${logBadge(log.event_type)}`}>
                       {log.event_type}
                     </span>
-                    <span className="text-[9px] text-zinc-400 font-mono">
-                      {new Date(log.timestamp).toLocaleTimeString()}
+                    <span className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-snug truncate w-full" title={log.message}>
+                      {log.message}
                     </span>
                   </div>
-                  <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">{log.message}</p>
+                  
+                  {/* Time Column */}
+                  <span className="text-[10px] text-zinc-500 font-mono text-center shrink-0">
+                    {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </span>
+                  
+                  {/* Triggered By Column */}
+                  <div className="text-[10px] text-zinc-500 text-right truncate" title={log.triggered_by || 'System'}>
+                    {log.triggered_by ? (
+                      <span className="flex items-center justify-end gap-1 text-zinc-600 dark:text-zinc-400">
+                        <svg className="w-2.5 h-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        <span className="truncate">{log.triggered_by.split('@')[0]}</span>
+                      </span>
+                    ) : (
+                      <span className="italic opacity-60">-</span>
+                    )}
+                  </div>
                 </div>
               ))
             )}

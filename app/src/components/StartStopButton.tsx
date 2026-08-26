@@ -64,8 +64,19 @@ export default function StartStopButton() {
       console.log(`[Socket.io] ✅ Connected! Socket ID: ${socket.id}`);
       setSocketConnected(true);
 
-      // Join Frappe site room (to receive general broadcasts)
-      socket.emit('login', { user: 'Guest' });
+      // Join Frappe user room (to receive targeted broadcasts for this user)
+      let socketUser = 'Guest';
+      try {
+        const storedUser = localStorage.getItem('user_info');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          socketUser = parsedUser.email || parsedUser.user_id || 'Guest';
+        }
+      } catch (e) {
+        // ignore
+      }
+      console.log(`[Socket.io] Joining user room as: ${socketUser}`);
+      socket.emit('login', { user: socketUser });
     });
     
     socket.on('disconnect', (reason) => {
@@ -275,7 +286,7 @@ export default function StartStopButton() {
           <p className="text-zinc-400 text-sm mt-1">Use the Add Device button to connect a motor.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full max-w-[1600px] mx-auto">
           {deviceIds.map((id) => (
             <DeviceCard key={id} deviceId={id} socket={socketInstance} />
           ))}
