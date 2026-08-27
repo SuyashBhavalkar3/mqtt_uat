@@ -19,11 +19,14 @@ interface DeviceStatusResponse {
 
 interface DeviceLog {
   name?: string;
-  timestamp: string;
-  event_type: 'Command' | 'Status' | string;
-  message: string;
-  triggered_by?: string;
+  timestamp?: string;
+  creation?: string;
+  event_type?: string;
+  status?: string;
+  message?: string;
   payload?: string;
+  triggered_by?: string;
+  owner?: string;
 }
 
 interface DeviceCardProps {
@@ -89,25 +92,25 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
     setLogsLoading(true);
     try {
       const res = await fetch(
-        `/api/method/smart_gbru.apis.MQTT.MQTT.get_device_logs`,
+        `/api/method/smart_gbru.mqtt.get_logs?device_id=${deviceId}`,
         {
-          method: 'POST',
+          method: 'GET',
           headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Authorization': `token ${apiKeyVal}:${apiSecretVal}`,
-          },
-          body: JSON.stringify({ device_id: deviceId }),
+          }
         }
       );
       const data = await res.json();
       const rawLogs: DeviceLog[] = Array.isArray(data?.message) ? data.message : [];
       const sorted = [...rawLogs].sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        (a, b) => new Date(b.creation || b.timestamp || '').getTime() - new Date(a.creation || a.timestamp || '').getTime()
       );
       setLogs(sorted.slice(0, 50));
+      return sorted;
     } catch (err) {
       console.error(`[Logs ${deviceId}] Failed to fetch:`, err);
+      return [];
     } finally {
       setLogsLoading(false);
     }
@@ -130,22 +133,24 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
       }
     };
 
-    const onLogsUpdate = (data: { device_id: string; logs: DeviceLog[] }) => {
-      if (data.device_id === deviceId) {
-        console.log(`[Socket.io ${deviceId}] Logs update received`);
-        const sorted = [...(data.logs || [])].sort(
-          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-        );
-        setLogs(sorted.slice(0, 50));
+    const onLogsUpdate = (data: any) => {
+      if (data.device_id && data.device_id.toLowerCase() === deviceId.toLowerCase()) {
+        console.log(`[Socket.io ${deviceId}] Real-time log received:`, data.log);
+        setLogs(prev => {
+          const newLogs = [data.log, ...prev];
+          return newLogs.sort(
+            (a, b) => new Date(b.creation || b.timestamp || '').getTime() - new Date(a.creation || a.timestamp || '').getTime()
+          ).slice(0, 50);
+        });
       }
     };
 
     socket.on('smartiot_device_status_update', onStatusUpdate);
-    socket.on('device_logs_update', onLogsUpdate);
+    socket.on('device_history_log_update', onLogsUpdate);
 
     return () => {
       socket.off('smartiot_device_status_update', onStatusUpdate);
-      socket.off('device_logs_update', onLogsUpdate);
+      socket.off('device_history_log_update', onLogsUpdate);
     };
   }, [socket, deviceId]);
 
@@ -201,6 +206,28 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
         if (msg.status === expectedAction) {
           applyStatusUpdate(msg.status, msg.last_updated, 'poll');
           fetchLogs();
+          stopPolling();
+        } else {
+          // Hardware status hasn't updated yet. Fetch logs to check if it replied with an error!
+          const freshLogs = await fetchLogs();
+          if (freshLogs && freshLogs.length > 0) {
+             const latest = freshLogs.find(l => (l.payload || l.message || '').startsWith('Received response: RESP'));
+             if (latest) {
+               const lTime = new Date(latest.creation || latest.timestamp || '').getTime();
+               const snapTime = new Date(snapshotTime).getTime();
+               // If this error log was generated AFTER we sent the command (with some clock skew leniency)
+               if (lTime >= snapTime - 5000) { 
+                 const txt = (latest.payload || latest.message || '').toLowerCase();
+                 const isAlert = txt.includes('warning') || txt.includes('cannot be started') || txt.includes('fault') || txt.includes('failure') || txt.includes('imbalance') || txt.includes('active');
+                 if (isAlert) {
+                   // Hardware actively rejected the command
+                   stopPolling();
+                   setLoading(false);
+                   showToast('Hardware command rejected.', false);
+                 }
+               }
+             }
+          }
         }
       } catch (err) {
         console.error(`[Poll ${deviceId}]`, err);
@@ -276,22 +303,55 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
         {toastMessage}
       </div>
 
-      <div className="w-full flex items-start justify-between mb-2">
-        <div>
-          <h3 className="text-xl font-bold text-zinc-900 dark:text-white font-mono">{deviceId}</h3>
-          <p className="text-xs text-zinc-400 mt-1">
-            {lastUpdated ? `Updated ${lastUpdated}` : 'Waiting for status...'}
-          </p>
+      <div className="w-full flex flex-col items-start justify-start mb-2">
+        <div className="w-full flex items-start justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-zinc-900 dark:text-white font-mono">{deviceId}</h3>
+            <p className="text-xs text-zinc-400 mt-1">
+              {lastUpdated ? `Updated ${lastUpdated}` : 'Waiting for status...'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {loading ? (
+              <svg className="animate-spin h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
+            ) : (
+              <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${status === 'started' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'}`}>
+                {status === 'started' ? 'ON' : 'OFF'}
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          {loading ? (
-            <svg className="animate-spin h-5 w-5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
-          ) : (
-            <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${status === 'started' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'}`}>
-              {status === 'started' ? 'ON' : 'OFF'}
-            </span>
-          )}
-        </div>
+
+        {(() => {
+          const latestResponseLog = logs.find(log => {
+            const txt = (log.payload || log.message || '');
+            return txt.startsWith('Received response: RESP');
+          });
+          if (!latestResponseLog) return null;
+          
+          let msgText = (latestResponseLog.payload || latestResponseLog.message || '').replace('Received response:', '').trim();
+          // Optional: strip the "RESPXX - " prefix for an even cleaner UI
+          if (msgText.match(/^RESP\d+\s*-\s*/)) {
+            msgText = msgText.replace(/^RESP\d+\s*-\s*/, '');
+          }
+
+          const isAlert = msgText.toLowerCase().includes('warning') || msgText.toLowerCase().includes('cannot be started') || msgText.toLowerCase().includes('fault') || msgText.toLowerCase().includes('failure') || msgText.toLowerCase().includes('imbalance') || msgText.toLowerCase().includes('active');
+
+          return (
+            <div className={`w-full mt-4 p-3 rounded-xl flex items-start gap-2.5 text-[11px] font-medium border ${
+              isAlert 
+                ? 'bg-yellow-50 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-900/50'
+                : 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-900/50'
+            }`}>
+              {isAlert ? (
+                <svg className="w-4 h-4 shrink-0 mt-0.5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              ) : (
+                <svg className="w-4 h-4 shrink-0 mt-0.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              )}
+              <span className="leading-relaxed">{msgText}</span>
+            </div>
+          );
+        })()}
       </div>
 
       <div className="flex w-full gap-4 mt-auto">
@@ -352,22 +412,56 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
             ) : logs.length === 0 ? (
               <div className="flex items-center justify-center h-full text-xs text-zinc-400">No logs yet.</div>
             ) : (
-              logs.map((log, idx) => (
-                <div key={idx} className="grid grid-cols-[2fr_1fr_1.5fr] gap-3 px-3 py-2.5 hover:bg-white dark:hover:bg-zinc-700/30 transition-colors items-center">
-                  {/* Status Column */}
-                  <div className="flex flex-col items-start gap-1 overflow-hidden">
-                    <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm ${logBadge(log.event_type)}`}>
-                      {log.event_type}
-                    </span>
-                    <span className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-snug truncate w-full" title={log.message}>
-                      {log.message}
-                    </span>
-                  </div>
+              logs.map((log, idx) => {
+                const rawPayload = log.payload || log.message || '';
+                let topText = rawPayload;
+                let bottomText = '';
+                let isAlert = false;
+                let isResponse = false;
 
-                  {/* Time Column */}
-                  <span className="text-[10px] text-zinc-500 font-mono text-center shrink-0">
-                    {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                  </span>
+                if (rawPayload.startsWith('Received response:')) {
+                  topText = 'Received response:';
+                  let msg = rawPayload.replace('Received response:', '').trim();
+                  if (msg.match(/^RESP\d+\s*-\s*/)) {
+                    msg = msg.replace(/^RESP\d+\s*-\s*/, '');
+                  }
+                  bottomText = msg;
+                  isResponse = true;
+                  const lowMsg = msg.toLowerCase();
+                  isAlert = lowMsg.includes('warning') || lowMsg.includes('cannot be started') || lowMsg.includes('fault') || lowMsg.includes('failure') || lowMsg.includes('imbalance') || lowMsg.includes('active');
+                } else if (rawPayload.startsWith('Sent command:')) {
+                  topText = 'Sent command:';
+                  bottomText = rawPayload.replace('Sent command:', '').trim();
+                }
+
+                return (
+                  <div key={idx} className="grid grid-cols-[2fr_1fr_1.5fr] gap-3 px-3 py-2.5 hover:bg-white dark:hover:bg-zinc-700/30 transition-colors items-start">
+                    {/* Status Column */}
+                    <div className="flex flex-col items-start gap-1 overflow-hidden">
+                      <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm ${logBadge(log.event_type || log.status || 'Info')}`}>
+                        {log.event_type || log.status || 'Info'}
+                      </span>
+                      
+                      <div className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-snug w-full" title={rawPayload}>
+                        <span className="truncate block w-full">{topText}</span>
+                        {bottomText && (
+                          <div className={`mt-1.5 font-medium px-2 py-1.5 rounded-md text-[10.5px] border leading-relaxed ${
+                            isResponse 
+                              ? isAlert 
+                                ? 'bg-yellow-50 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-900/50'
+                                : 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-900/50'
+                              : 'text-zinc-600 bg-zinc-100/80 border-zinc-200 dark:bg-zinc-800/80 dark:text-zinc-400 dark:border-zinc-700'
+                          }`}>
+                            {bottomText}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Time Column */}
+                    <span className="text-[10px] text-zinc-500 font-mono text-center shrink-0 mt-0.5">
+                      {new Date(log.creation || log.timestamp || '').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </span>
 
                   {/* Triggered By Column */}
                   <div className="text-[10px] text-zinc-500 text-right truncate" title={log.triggered_by || 'System'}>
@@ -381,7 +475,8 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
                     )}
                   </div>
                 </div>
-              ))
+              );
+            })
             )}
             <div ref={logEndRef} />
           </div>
