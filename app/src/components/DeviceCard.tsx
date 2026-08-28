@@ -40,6 +40,7 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastIsSuccess, setToastIsSuccess] = useState<boolean>(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState<boolean>(false);
 
   // Log panel
   const [logOpen, setLogOpen] = useState<boolean>(false);
@@ -67,9 +68,23 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
           'Authorization': `token ${apiKeyVal}:${apiSecretVal}`,
         }
       });
-      const data = await res.json();
-      if (res.ok && data.message) {
-        applyStatusUpdate(data.message.status, data.message.last_updated, 'init');
+      
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (err) {
+        console.error(`[Init] API returned non-JSON response: ${text.substring(0, 100)}...`);
+        return;
+      }
+
+      if (res.ok && data?.message) {
+        const msg = Array.isArray(data.message) ? data.message[0] : data.message;
+        if (msg) {
+          const s = msg.current_status || msg.status || msg.last_sent_command;
+          const t = msg.last_updated || msg.creation || msg.last_seen_date_and_time || new Date().toISOString();
+          applyStatusUpdate(s, t, 'init', msg.last_online_status || msg.online_status);
+        }
       }
     } catch (err) {
       console.error(`[Init] Failed to fetch status for ${deviceId}:`, err);
@@ -126,8 +141,10 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
 
     const onStatusUpdate = (data: any) => {
       if (data.device_id && data.device_id.toLowerCase() === deviceId.toLowerCase()) {
-        console.log(`[Socket.io ${deviceId}] Real-time status:`, data);
-        applyStatusUpdate(data.status, data.status_last_updated || new Date().toISOString(), 'socket');
+        const msg = data.message || data;
+        const s = msg.current_status || msg.status || msg.last_sent_command;
+        const t = msg.last_updated || msg.creation || msg.last_seen_date_and_time || new Date().toISOString();
+        applyStatusUpdate(s, t, 'socket', msg.last_online_status || msg.online_status);
       }
     };
 
@@ -153,12 +170,16 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
   }, [socket, deviceId]);
 
   // ── Shared status update ───────────────────────────────────────────────
-  const applyStatusUpdate = (rawStatus: string, lastUpdatedAt: string, source: 'socket' | 'poll' | 'init') => {
-    const isOn = rawStatus === 'On';
+  const applyStatusUpdate = (rawStatus: string, lastUpdatedAt: string, source: 'socket' | 'poll' | 'init', onlineStatus?: string) => {
+    const isOn = rawStatus === 'On' || rawStatus === 'G2' || rawStatus === 'started';
     const formatted = new Date(lastUpdatedAt).toLocaleTimeString();
     setStatus(isOn ? 'started' : 'stopped');
     setLastUpdated(new Date(lastUpdatedAt).toLocaleString());
     setLoading(false); // always clear loading — handles socket, poll, and init
+
+    if (onlineStatus !== undefined) {
+      setIsOnline(onlineStatus === 'Online' || onlineStatus === 'online');
+    }
 
     if (source !== 'init') {
       showToast(`${deviceId} → ${rawStatus}  •  ${formatted}`, isOn);
@@ -195,12 +216,29 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
             }
           }
         );
-        const data = await res.json();
-        const msg = data.message;
+        
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (err) {
+          console.error(`[Poll] API returned non-JSON response: ${text.substring(0, 100)}...`);
+          return;
+        }
+
+        const msg = Array.isArray(data?.message) ? data.message[0] : data?.message;
+        if (!msg) return;
+
+        const s = msg.current_status || msg.status || msg.last_sent_command;
+        const t = msg.last_updated || msg.creation || msg.last_seen_date_and_time || new Date().toISOString();
+        
+        // Treat both G2 and On as successful starts
+        const isMatch = (expectedAction === 'On' && (s === 'On' || s === 'G2')) || (expectedAction === 'Off' && (s === 'Off' || s === 'G1')) || (s === expectedAction);
+
         // Only check status match — skip timestamp comparison to avoid
         // server/client clock skew causing the poll to never resolve
-        if (msg.status === expectedAction) {
-          applyStatusUpdate(msg.status, msg.last_updated, 'poll');
+        if (isMatch) {
+          applyStatusUpdate(s, t, 'poll', msg.last_online_status || msg.online_status);
           fetchLogs();
           stopPolling();
         } else {
@@ -302,7 +340,13 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
       <div className="w-full flex flex-col items-start justify-start mb-2">
         <div className="w-full flex items-start justify-between">
           <div>
-            <h3 className="text-xl font-bold text-zinc-900 dark:text-white font-mono">{deviceId}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-bold text-zinc-900 dark:text-white font-mono">{deviceId}</h3>
+              <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full border border-zinc-200 dark:border-zinc-700">
+                <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`}></span>
+                <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{isOnline ? 'Online' : 'Offline'}</span>
+              </div>
+            </div>
             <p className="text-xs text-zinc-400 mt-1">
               {lastUpdated ? `Updated ${lastUpdated}` : 'Waiting for status...'}
             </p>
