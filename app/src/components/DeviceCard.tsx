@@ -60,14 +60,12 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
     try {
       const apiKeyVal = localStorage.getItem('api_key') || '';
       const apiSecretVal = localStorage.getItem('api_secret') || '';
-      const res = await fetch(`/api/method/smart_gbru.mqtt.get_status`, {
-        method: 'POST',
+      const res = await fetch(`/api/method/smart_gbru.mqtt.get_monitoring_status?device_id=${deviceId}`, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': `token ${apiKeyVal}:${apiSecretVal}`,
-        },
-        body: JSON.stringify({ device_id: deviceId }),
+        }
       });
       const data = await res.json();
       if (res.ok && data.message) {
@@ -188,15 +186,13 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
       attempts++;
       try {
         const res = await fetch(
-          `/api/method/smart_gbru.mqtt.get_status`,
+          `/api/method/smart_gbru.mqtt.get_monitoring_status?device_id=${deviceId}`,
           {
-            method: 'POST',
+            method: 'GET',
             headers: {
-              'Content-Type': 'application/json',
               'Accept': 'application/json',
               'Authorization': `token ${apiKeyVal}:${apiSecretVal}`,
-            },
-            body: JSON.stringify({ device_id: deviceId }),
+            }
           }
         );
         const data = await res.json();
