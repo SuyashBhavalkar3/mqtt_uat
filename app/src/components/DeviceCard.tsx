@@ -40,7 +40,6 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastIsSuccess, setToastIsSuccess] = useState<boolean>(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const [isOnline, setIsOnline] = useState<boolean>(false);
 
   // Log panel
   const [logOpen, setLogOpen] = useState<boolean>(false);
@@ -171,18 +170,19 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
 
   // ── Shared status update ───────────────────────────────────────────────
   const applyStatusUpdate = (rawStatus: string, lastUpdatedAt: string, source: 'socket' | 'poll' | 'init', onlineStatus?: string) => {
-    const isOn = rawStatus === 'On' || rawStatus === 'G2' || rawStatus === 'started';
+    let isOn = false;
+    if (onlineStatus !== undefined && onlineStatus !== null) {
+      isOn = onlineStatus.toLowerCase() === 'online';
+    } else {
+      isOn = rawStatus === 'On' || rawStatus === 'G2' || rawStatus === 'started';
+    }
     const formatted = new Date(lastUpdatedAt).toLocaleTimeString();
     setStatus(isOn ? 'started' : 'stopped');
     setLastUpdated(new Date(lastUpdatedAt).toLocaleString());
     setLoading(false); // always clear loading — handles socket, poll, and init
 
-    if (onlineStatus !== undefined) {
-      setIsOnline(onlineStatus === 'Online' || onlineStatus === 'online');
-    }
-
     if (source !== 'init') {
-      showToast(`${deviceId} → ${rawStatus}  •  ${formatted}`, isOn);
+      showToast(`${deviceId} → ${isOn ? 'ON' : 'OFF'}  •  ${formatted}`, isOn);
     }
 
     if (source === 'poll') stopPolling();
@@ -253,11 +253,20 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
                if (lTime >= snapTime - 5000) { 
                  const txt = (latest.payload || latest.message || '').toLowerCase();
                  const isAlert = txt.includes('warning') || txt.includes('cannot be started') || txt.includes('fault') || txt.includes('failure') || txt.includes('imbalance') || txt.includes('active');
+                 const isStoppedConfirmation = txt.includes('has been stopped');
+                 const isStartedConfirmation = txt.includes('has been started');
+
                  if (isAlert) {
                    // Hardware actively rejected the command
                    stopPolling();
                    setLoading(false);
                    showToast('Hardware command rejected.', false);
+                 } else if (expectedAction === 'Off' && isStoppedConfirmation) {
+                   applyStatusUpdate('Off', latest.creation || latest.timestamp || new Date().toISOString(), 'poll');
+                   stopPolling();
+                 } else if (expectedAction === 'On' && isStartedConfirmation) {
+                   applyStatusUpdate('On', latest.creation || latest.timestamp || new Date().toISOString(), 'poll');
+                   stopPolling();
                  }
                }
              }
@@ -340,13 +349,7 @@ export default function DeviceCard({ deviceId, socket }: DeviceCardProps) {
       <div className="w-full flex flex-col items-start justify-start mb-2">
         <div className="w-full flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl font-bold text-zinc-900 dark:text-white font-mono">{deviceId}</h3>
-              <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full border border-zinc-200 dark:border-zinc-700">
-                <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`}></span>
-                <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{isOnline ? 'Online' : 'Offline'}</span>
-              </div>
-            </div>
+            <h3 className="text-xl font-bold text-zinc-900 dark:text-white font-mono">{deviceId}</h3>
             <p className="text-xs text-zinc-400 mt-1">
               {lastUpdated ? `Updated ${lastUpdated}` : 'Waiting for status...'}
             </p>
