@@ -98,6 +98,15 @@ export default function StartStopButton() {
       console.log(`[Socket.io GLOBAL] Received smartiot_device_status_update:`, data);
     });
 
+    socket.on('device_list_update', (data) => {
+      console.log(`[Socket.io GLOBAL] Received device_list_update:`, data);
+      if (data && Array.isArray(data.devices)) {
+        const ids = data.devices.map((d: any) => d.device_id.toLowerCase());
+        setDeviceIds(ids);
+        localStorage.setItem('added_devices', JSON.stringify(ids));
+      }
+    });
+
     socket.onAny((eventName, ...args) => {
       console.log(`[Socket.io GLOBAL - ANY] Event: ${eventName}`, args);
     });
