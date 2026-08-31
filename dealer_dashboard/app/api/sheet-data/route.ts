@@ -25,8 +25,6 @@ export async function GET(request: Request) {
       },
     });
 
-    const pingTime = process.env.PING_TIME || '60';
-
     if (!response.ok) {
       return new Response(
         JSON.stringify({ error: `Failed to fetch from Performance API: status ${response.status}` }),
@@ -34,7 +32,6 @@ export async function GET(request: Request) {
           status: response.status,
           headers: {
             'Content-Type': 'application/json',
-            'x-ping-time': pingTime,
           },
         }
       );
@@ -42,27 +39,10 @@ export async function GET(request: Request) {
 
     const rawData = await response.json();
 
-    const images: Record<string, string> = {};
-    for (const key of Object.keys(process.env)) {
-      if (key.endsWith('_IMAGE_URL')) {
-        const tsmName = key.replace('_IMAGE_URL', '').trim().toUpperCase();
-        images[tsmName] = process.env[key] || '';
-      }
-    }
-
-    const names: Record<string, string> = {};
-    for (const key of Object.keys(process.env)) {
-      if (key.endsWith('_NAME')) {
-        const tsmKey = key.replace('_NAME', '').trim().toUpperCase();
-        names[tsmKey] = process.env[key] || '';
-      }
-    }
-
-    return new Response(JSON.stringify({ data: rawData, images, names }), {
+    return new Response(JSON.stringify({ data: rawData }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'x-ping-time': pingTime,
       },
     });
   } catch (err: any) {
@@ -73,7 +53,6 @@ export async function GET(request: Request) {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
-          'x-ping-time': process.env.PING_TIME || '60',
         },
       }
     );

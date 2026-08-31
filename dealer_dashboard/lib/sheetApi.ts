@@ -20,12 +20,11 @@ export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime:
     cache: 'no-store',
   });
 
-  const pingTimeHeader = response.headers.get('x-ping-time');
-  const pingTime = pingTimeHeader ? parseFloat(pingTimeHeader) : 2.5;
-
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
+
+  const pingTime = 2.5;
 
   const json = await response.json();
   const rawData = json.data;
