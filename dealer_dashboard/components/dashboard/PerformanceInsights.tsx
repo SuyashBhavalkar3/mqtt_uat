@@ -22,8 +22,8 @@ export function PerformanceInsights({ data }: PerformanceInsightsProps) {
         ? `Value: ${formatCurrency(insights.highestOrderTsm.orderAmount)}`
         : '',
       icon: TrendingUp,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50/70 border border-blue-100/30',
     },
     {
       title: 'Highest Volume (Orders)',
@@ -32,8 +32,8 @@ export function PerformanceInsights({ data }: PerformanceInsightsProps) {
         ? `${insights.highestOrdersTsm.orders} total orders`
         : '',
       icon: Sparkles,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50',
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50/70 border border-blue-100/30',
     },
     {
       title: 'Highest Amount Collected',
@@ -42,8 +42,8 @@ export function PerformanceInsights({ data }: PerformanceInsightsProps) {
         ? `Collected: ${formatCurrency(insights.highestReceivedTsm.receivedAmount)}`
         : '',
       icon: Award,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50/70 border border-blue-100/30',
     },
     {
       title: 'Best Collection Efficiency',
@@ -52,8 +52,8 @@ export function PerformanceInsights({ data }: PerformanceInsightsProps) {
         ? `Rate: ${formatPercentage(insights.bestCollectionTsm.collectionEfficiency)}`
         : '',
       icon: Percent,
-      color: 'text-teal-600',
-      bgColor: 'bg-teal-50',
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50/70 border border-blue-100/30',
     },
   ];
 

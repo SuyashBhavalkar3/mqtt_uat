@@ -139,40 +139,40 @@ export function PerformanceTable({ data }: PerformanceTableProps) {
                     className={`hover:bg-zinc-50 transition-colors duration-150 ${isBest ? 'bg-emerald-50/30' : ''
                       }`}
                   >
-                    <td className="px-6 py-4 text-sm font-semibold text-zinc-900 flex items-center gap-2">
+                    <td className="px-4 py-3 text-sm font-semibold text-zinc-900 flex items-center gap-2">
                       {row.tsm}
                       {isBest && (
-                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                          <Star className="h-3 w-3 fill-emerald-600 text-emerald-600" />
+                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                          <Star className="h-3 w-3 fill-blue-600 text-blue-600" />
                           <span>Top Performer</span>
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm font-mono font-medium text-zinc-950 text-right">
+                    <td className="px-4 py-3 text-sm font-mono font-medium text-zinc-950 text-right">
                       {formatCurrency(row.orderAmount)}
                     </td>
-                    <td className="px-6 py-4 text-sm font-mono font-medium text-zinc-950 text-right">
+                    <td className="px-4 py-3 text-sm font-mono font-medium text-zinc-950 text-right">
                       {row.orders.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 text-sm font-mono font-medium text-zinc-950 text-right">
+                    <td className="px-4 py-3 text-sm font-mono font-medium text-zinc-950 text-right">
                       {formatCurrency(row.receivedAmount)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-right">
+                    <td className="px-4 py-3 text-sm text-right">
                       <span
                         className={`inline-block font-mono font-bold px-2 py-0.5 rounded text-xs ${row.collectionEfficiency >= 90
-                          ? 'bg-emerald-100 text-emerald-800'
+                          ? 'bg-blue-100 text-blue-800 border border-blue-200/50'
                           : row.collectionEfficiency >= 75
-                            ? 'bg-blue-100 text-blue-800'
+                            ? 'bg-blue-50 text-blue-600 border border-blue-100/30'
                             : row.collectionEfficiency >= 50
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-red-100 text-red-800'
+                              ? 'bg-zinc-100 text-zinc-600'
+                              : 'bg-zinc-50 text-zinc-400'
                           }`}
                       >
                         {formatPercentage(row.collectionEfficiency)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-right font-mono font-semibold">
-                      <span className={row.gap > 0 ? 'text-amber-700' : 'text-zinc-500'}>
+                    <td className="px-4 py-3 text-sm text-right font-mono font-semibold">
+                      <span className={row.gap > 0 ? 'text-zinc-800 font-bold' : 'text-zinc-500'}>
                         {formatCurrency(row.gap)}
                       </span>
                     </td>
