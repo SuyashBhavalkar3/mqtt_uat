@@ -87,10 +87,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               <span className="font-medium">Received Amount:</span>
               <span className="font-mono font-bold">{formatCurrency(receivedAmount)}</span>
             </p>
-            <p className="text-[#93c5fd] flex items-center justify-between gap-6">
-              <span className="font-medium">Orders Count:</span>
-              <span className="font-mono font-bold">{orders} orders</span>
-            </p>
+
             <div className="pt-1.5 border-t border-zinc-100 flex flex-col gap-0.5">
               <p className="text-zinc-600 flex items-center justify-between gap-6">
                 <span className="font-medium">Collection %:</span>
@@ -114,10 +111,10 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
     <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
       <div className="mb-4">
         <h3 className="text-lg font-bold text-zinc-900">
-          Order Performance vs Order Count by TSM
+          Order Performance by TSM
         </h3>
         <p className="text-xs text-zinc-500 mt-0.5">
-          Grouped overview showing target amounts, collections, and total number of transactions
+          Grouped overview showing target amounts and collections for each TSM
         </p>
       </div>
 
@@ -130,10 +127,6 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#60a5fa' }}></span>
           <span>Received Amount</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#bfdbfe' }}></span>
-          <span>Orders</span>
         </span>
       </div>
 
@@ -169,17 +162,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               tickFormatter={formatYAxis}
               dx={-5}
             />
-            {/* Secondary Y-Axis (Right) - Orders Scale */}
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              stroke="#71717a"
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(val) => `${val}`}
-              dx={5}
-            />
+
             <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f4f4f5', opacity: 0.5 }} />
             <Bar
               yAxisId="left"
@@ -201,15 +184,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
             >
               <LabelList dataKey="imageUrl" content={renderCustomLabel} />
             </Bar>
-            <Bar
-              yAxisId="right"
-              name="Orders"
-              dataKey="orders"
-              fill="#bfdbfe"
-              radius={[4, 4, 0, 0]}
-              maxBarSize={30}
-              isAnimationActive={false}
-            />
+
           </BarChart>
         </ResponsiveContainer>
       </div>
