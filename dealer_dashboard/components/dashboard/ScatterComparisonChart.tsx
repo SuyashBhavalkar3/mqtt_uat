@@ -19,6 +19,9 @@ interface ScatterComparisonChartProps {
 
 export function ScatterComparisonChart({ data }: ScatterComparisonChartProps) {
   const formatAmount = (value: number) => {
+    if (value >= 100000) {
+      return `₹${(value / 100000).toFixed(2).replace(/\.00$/, '')}L`;
+    }
     if (value >= 1000) return `₹${(value / 1000).toFixed(0)}k`;
     return `₹${value}`;
   };
