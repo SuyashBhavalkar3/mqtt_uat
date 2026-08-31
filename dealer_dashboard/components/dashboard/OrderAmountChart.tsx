@@ -79,11 +79,11 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
         <div className="bg-white p-4 border border-zinc-200 shadow-lg rounded-lg text-sm">
           <p className="font-bold text-zinc-900 mb-2">{label}</p>
           <div className="space-y-1.5">
-            <p className="text-[#1e3a8a] flex items-center justify-between gap-6">
+            <p className="text-[#3b82f6] flex items-center justify-between gap-6">
               <span className="font-medium">Order Amount:</span>
               <span className="font-mono font-bold">{formatCurrency(orderAmount)}</span>
             </p>
-            <p className="text-[#3b82f6] flex items-center justify-between gap-6">
+            <p className="text-[#60a5fa] flex items-center justify-between gap-6">
               <span className="font-medium">Received Amount:</span>
               <span className="font-mono font-bold">{formatCurrency(receivedAmount)}</span>
             </p>
@@ -124,15 +124,15 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
       {/* Legend rendered as a standard HTML container at the very top, completely outside Recharts SVG context */}
       <div className="flex justify-center gap-6 text-[12px] font-semibold text-zinc-600 pb-2 border-b border-zinc-100 mb-6">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#1e3a8a' }}></span>
+          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#3b82f6' }}></span>
           <span>Order Amount</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#3b82f6' }}></span>
+          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#60a5fa' }}></span>
           <span>Received Amount</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#93c5fd' }}></span>
+          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#bfdbfe' }}></span>
           <span>Orders</span>
         </span>
       </div>
@@ -185,7 +185,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               yAxisId="left"
               name="Order Amount"
               dataKey="orderAmount"
-              fill="#1e3a8a"
+              fill="#3b82f6"
               radius={[4, 4, 0, 0]}
               maxBarSize={30}
               isAnimationActive={false}
@@ -194,7 +194,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               yAxisId="left"
               name="Received Amount"
               dataKey="receivedAmount"
-              fill="#3b82f6"
+              fill="#60a5fa"
               radius={[4, 4, 0, 0]}
               maxBarSize={30}
               isAnimationActive={false}
@@ -205,7 +205,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               yAxisId="right"
               name="Orders"
               dataKey="orders"
-              fill="#93c5fd"
+              fill="#bfdbfe"
               radius={[4, 4, 0, 0]}
               maxBarSize={30}
               isAnimationActive={false}

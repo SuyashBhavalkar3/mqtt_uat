@@ -73,7 +73,7 @@ export function OrdersChart({ data }: OrdersChartProps) {
             <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f4f4f5', opacity: 0.5 }} />
             <Bar
               dataKey="orders"
-              fill="#93c5fd"
+              fill="#bfdbfe"
               radius={[0, 4, 4, 0]}
               maxBarSize={30}
             />

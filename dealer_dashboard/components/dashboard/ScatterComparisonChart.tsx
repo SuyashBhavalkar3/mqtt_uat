@@ -70,11 +70,11 @@ export function ScatterComparisonChart({ data }: ScatterComparisonChartProps) {
       {/* Legend rendered as standard HTML */}
       <div className="flex justify-center gap-6 text-[12px] font-semibold text-zinc-600 pb-2 border-b border-zinc-100 mb-6">
         <span className="flex items-center gap-1.5">
-          <span className="w-4 h-0.5 bg-[#1e3a8a] inline-block"></span>
+          <span className="w-4 h-0.5 bg-[#3b82f6] inline-block"></span>
           <span>Order Amount</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-4 h-0.5 bg-[#3b82f6] inline-block"></span>
+          <span className="w-4 h-0.5 bg-[#60a5fa] inline-block"></span>
           <span>Received Amount</span>
         </span>
       </div>
@@ -111,7 +111,7 @@ export function ScatterComparisonChart({ data }: ScatterComparisonChartProps) {
             <Line
               type="monotone"
               dataKey="orderAmount"
-              stroke="#1e3a8a"
+              stroke="#3b82f6"
               strokeWidth={3}
               dot={{ r: 4, strokeWidth: 2 }}
               activeDot={{ r: 6 }}
@@ -120,7 +120,7 @@ export function ScatterComparisonChart({ data }: ScatterComparisonChartProps) {
             <Line
               type="monotone"
               dataKey="receivedAmount"
-              stroke="#3b82f6"
+              stroke="#60a5fa"
               strokeWidth={3}
               dot={{ r: 4, strokeWidth: 2 }}
               activeDot={{ r: 6 }}
