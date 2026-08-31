@@ -177,6 +177,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               radius={[4, 4, 0, 0]}
               maxBarSize={30}
               isAnimationActive={false}
+              minPointSize={1}
             />
             <Bar
               yAxisId="left"
@@ -186,6 +187,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               radius={[4, 4, 0, 0]}
               maxBarSize={30}
               isAnimationActive={false}
+              minPointSize={1}
             >
               <LabelList dataKey="imageUrl" content={renderCustomLabel} />
             </Bar>
