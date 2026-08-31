@@ -7,9 +7,15 @@ const API_KEY = process.env['X-API-KEY'] || '';
 const API_SECRET = process.env['X-API-SECRET'] || '';
 const API_URL = `${BASE_URL}/api/method/warrior.apis.performance_report.top_employee_performance`;
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const response = await fetch(API_URL, {
+    const { searchParams } = new URL(request.url);
+    const targetUrl = new URL(API_URL);
+    searchParams.forEach((value, key) => {
+      targetUrl.searchParams.set(key, value);
+    });
+
+    const response = await fetch(targetUrl.toString(), {
       method: 'GET',
       cache: 'no-store',
       headers: {

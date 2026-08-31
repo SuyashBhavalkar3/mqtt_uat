@@ -3,7 +3,11 @@ import { TSMData } from '../types/dashboard';
 const API_URL = '/api/sheet-data';
 
 export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime: number }> {
-  const response = await fetch(API_URL, {
+  const tzOffset = new Date().getTimezoneOffset() * 60000;
+  const localISODate = new Date(Date.now() - tzOffset).toISOString().split('T')[0];
+  const url = `${API_URL}?from_date=${localISODate}&to_date=${localISODate}`;
+
+  const response = await fetch(url, {
     cache: 'no-store',
   });
 
@@ -55,16 +59,7 @@ export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime:
         : `https://uatpreprod.gbru.in${emp.profile_photo}`;
     }
 
-    // Fallback to env images if profile_photo is null/empty
-    if (!imageUrl) {
-      // Find if any TSM key matches the employee's name
-      const foundTsmKey = Object.keys(names).find(
-        key => names[key].replace(/\s+/g, ' ').trim().toUpperCase() === tsm.toUpperCase()
-      );
-      if (foundTsmKey) {
-        imageUrl = images[foundTsmKey] || '';
-      }
-    }
+
 
     parsedData.push({
       tsm,

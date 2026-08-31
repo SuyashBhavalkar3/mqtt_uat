@@ -24,15 +24,6 @@ export function KPICards({ data, isLoading }: KPICardsProps) {
       borderColor: 'border-blue-100',
     },
     {
-      title: 'Total Order Amount',
-      value: formatCurrency(summary.totalOrderAmount),
-      subtext: 'Across all TSMs',
-      icon: IndianRupee,
-      iconColor: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
-      borderColor: 'border-indigo-100',
-    },
-    {
       title: 'Total Orders',
       value: summary.totalOrders.toLocaleString(),
       subtext: 'Completed transactions',
@@ -40,6 +31,15 @@ export function KPICards({ data, isLoading }: KPICardsProps) {
       iconColor: 'text-amber-600',
       bgColor: 'bg-amber-50',
       borderColor: 'border-amber-100',
+    },
+    {
+      title: 'Total Order Amount',
+      value: formatCurrency(summary.totalOrderAmount),
+      subtext: 'Across all TSMs',
+      icon: IndianRupee,
+      iconColor: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      borderColor: 'border-indigo-100',
     },
     {
       title: 'Total Received Amount',
@@ -76,21 +76,19 @@ export function KPICards({ data, isLoading }: KPICardsProps) {
         return (
           <div
             key={idx}
-            className={`bg-white border border-zinc-200 hover:border-zinc-300 transition-all duration-200 rounded-xl p-6 shadow-sm flex flex-col justify-between`}
+            className="bg-white border border-zinc-200 hover:border-zinc-300 transition-all duration-200 rounded-xl p-6 shadow-sm flex items-center gap-5"
           >
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-zinc-500 text-sm font-semibold tracking-wide uppercase">
+            <div className={`${card.bgColor} ${card.iconColor} p-3 rounded-xl border ${card.borderColor} flex-shrink-0 flex items-center justify-center`}>
+              <Icon className="h-6 w-6" />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-zinc-500 text-xs font-semibold tracking-wide uppercase">
                 {card.title}
               </span>
-              <div className={`${card.bgColor} ${card.iconColor} p-2 rounded-lg border ${card.borderColor}`}>
-                <Icon className="h-5 w-5" />
-              </div>
-            </div>
-            <div>
               <h3 className="text-2xl font-bold text-zinc-950 font-sans tracking-tight">
                 {card.value}
               </h3>
-              <p className="text-xs text-zinc-500 mt-1 flex items-center gap-1 font-medium">
+              <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1 font-medium">
                 {card.subtext}
               </p>
             </div>

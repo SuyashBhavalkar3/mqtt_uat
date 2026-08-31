@@ -68,7 +68,7 @@ export function PerformanceInsights({ data }: PerformanceInsightsProps) {
             Performance Insights
           </h3>
           <p className="text-xs text-zinc-500 mt-0.5">
-            Key automated takeaways generated from the live Google Sheet data
+            Key automated takeaways generated from the live backend data
           </p>
         </div>
       </div>

@@ -14,15 +14,15 @@ type SortOrder = 'asc' | 'desc';
 
 export function PerformanceTable({ data }: PerformanceTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<SortField>('tsm');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [sortField, setSortField] = useState<SortField>('orderAmount');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   // Find the overall best-performing TSM based on efficiency (and minimal orders to be fair)
   const bestTsmName = useMemo(() => {
     const activeTsms = data.filter(d => d.orderAmount > 0);
     if (activeTsms.length === 0) return '';
-    return activeTsms.reduce((best, current) =>
-      current.collectionEfficiency > best.collectionEfficiency ? current : best
+    return activeTsms.reduce((best, current) => 
+      current.orderAmount > best.orderAmount ? current : best
     ).tsm;
   }, [data]);
 

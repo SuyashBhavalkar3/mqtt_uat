@@ -59,30 +59,34 @@ export function calculateInsights(data: TSMData[]): PerformanceInsightsData {
     };
   }
 
-  let highestOrderTsm = data[0];
-  let highestOrdersTsm = data[0];
-  let highestReceivedTsm = data[0];
-  
-  // For best collection efficiency, let's filter TSMs with orders and orderAmount > 0
-  const activeTsms = data.filter(item => item.orderAmount > 0);
-  let bestCollectionTsm = activeTsms.length > 0 ? activeTsms[0] : null;
+  let highestOrderTsm: TSMData | null = null;
+  let highestOrdersTsm: TSMData | null = null;
+  let highestReceivedTsm: TSMData | null = null;
 
   for (const item of data) {
-    if (item.orderAmount > highestOrderTsm.orderAmount) {
+    if (item.orderAmount > 0 && (!highestOrderTsm || item.orderAmount > highestOrderTsm.orderAmount)) {
       highestOrderTsm = item;
     }
-    if (item.orders > highestOrdersTsm.orders) {
+    if (item.orders > 0 && (!highestOrdersTsm || item.orders > highestOrdersTsm.orders)) {
       highestOrdersTsm = item;
     }
-    if (item.receivedAmount > highestReceivedTsm.receivedAmount) {
+    if (item.receivedAmount > 0 && (!highestReceivedTsm || item.receivedAmount > highestReceivedTsm.receivedAmount)) {
       highestReceivedTsm = item;
     }
   }
 
-  if (bestCollectionTsm) {
+  const activeTsms = data.filter(item => item.orderAmount > 0);
+  let bestCollectionTsm: TSMData | null = null;
+
+  if (activeTsms.length > 0) {
+    bestCollectionTsm = activeTsms[0];
     for (const item of activeTsms) {
       if (item.collectionEfficiency > bestCollectionTsm.collectionEfficiency) {
         bestCollectionTsm = item;
+      } else if (item.collectionEfficiency === bestCollectionTsm.collectionEfficiency) {
+        if (item.receivedAmount > bestCollectionTsm.receivedAmount) {
+          bestCollectionTsm = item;
+        }
       }
     }
   }
