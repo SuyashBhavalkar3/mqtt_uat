@@ -97,7 +97,7 @@ export function CollectionEfficiencyChart({ data }: CollectionEfficiencyChartPro
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              width={150}
+              width={70}
               tick={{ fontWeight: '600', fill: '#18181b' }}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f4f4f5', opacity: 0.5 }} />
