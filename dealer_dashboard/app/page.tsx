@@ -123,9 +123,6 @@ export default function Home() {
           data.length > 0 && (
             <div className="space-y-8">
               
-              {/* KPI Cards */}
-              <KPICards data={data} isLoading={status === 'loading'} />
-
               {/* Main Comparison Chart */}
               <OrderAmountChart data={data} />
 
@@ -143,6 +140,9 @@ export default function Home() {
 
               {/* Performance Insights */}
               <PerformanceInsights data={data} />
+
+              {/* KPI Cards (Footer status overview) */}
+              <KPICards data={data} isLoading={status === 'loading'} />
 
             </div>
           )
