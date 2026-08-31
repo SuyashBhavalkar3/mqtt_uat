@@ -180,6 +180,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               fill="#2563eb"
               radius={[4, 4, 0, 0]}
               maxBarSize={30}
+              isAnimationActive={false}
             />
             <Bar
               yAxisId="left"
@@ -188,6 +189,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               fill="#059669"
               radius={[4, 4, 0, 0]}
               maxBarSize={30}
+              isAnimationActive={false}
             >
               <LabelList dataKey="imageUrl" content={renderCustomLabel} />
             </Bar>
@@ -198,6 +200,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               fill="#d97706"
               radius={[4, 4, 0, 0]}
               maxBarSize={30}
+              isAnimationActive={false}
             />
           </BarChart>
         </ResponsiveContainer>
