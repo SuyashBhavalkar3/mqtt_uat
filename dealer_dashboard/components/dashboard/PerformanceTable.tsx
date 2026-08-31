@@ -21,7 +21,7 @@ export function PerformanceTable({ data }: PerformanceTableProps) {
   const bestTsmName = useMemo(() => {
     const activeTsms = data.filter(d => d.orderAmount > 0);
     if (activeTsms.length === 0) return '';
-    return activeTsms.reduce((best, current) => 
+    return activeTsms.reduce((best, current) =>
       current.orderAmount > best.orderAmount ? current : best
     ).tsm;
   }, [data]);
@@ -160,12 +160,12 @@ export function PerformanceTable({ data }: PerformanceTableProps) {
                     <td className="px-6 py-4 text-sm text-right">
                       <span
                         className={`inline-block font-mono font-bold px-2 py-0.5 rounded text-xs ${row.collectionEfficiency >= 90
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : row.collectionEfficiency >= 75
-                              ? 'bg-blue-100 text-blue-800'
-                              : row.collectionEfficiency >= 50
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-red-100 text-red-800'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : row.collectionEfficiency >= 75
+                            ? 'bg-blue-100 text-blue-800'
+                            : row.collectionEfficiency >= 50
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-red-100 text-red-800'
                           }`}
                       >
                         {formatPercentage(row.collectionEfficiency)}
