@@ -1,0 +1,102 @@
+'use client';
+
+import React from 'react';
+import { Users, ShoppingBag, IndianRupee, CreditCard } from 'lucide-react';
+import { TSMData } from '../../types/dashboard';
+import { calculateSummary, formatCurrency } from '../../lib/calculations';
+
+interface KPICardsProps {
+  data: TSMData[];
+  isLoading: boolean;
+}
+
+export function KPICards({ data, isLoading }: KPICardsProps) {
+  const summary = calculateSummary(data);
+
+  const cards = [
+    {
+      title: 'Total TSMs',
+      value: summary.totalTsmCount.toString(),
+      subtext: 'Active territories',
+      icon: Users,
+      iconColor: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-100',
+    },
+    {
+      title: 'Total Order Amount',
+      value: formatCurrency(summary.totalOrderAmount),
+      subtext: 'Across all TSMs',
+      icon: IndianRupee,
+      iconColor: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      borderColor: 'border-indigo-100',
+    },
+    {
+      title: 'Total Orders',
+      value: summary.totalOrders.toLocaleString(),
+      subtext: 'Completed transactions',
+      icon: ShoppingBag,
+      iconColor: 'text-amber-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-100',
+    },
+    {
+      title: 'Total Received Amount',
+      value: formatCurrency(summary.totalReceivedAmount),
+      subtext: `Efficiency: ${summary.overallCollectionEfficiency.toFixed(2)}%`,
+      icon: CreditCard,
+      iconColor: 'text-emerald-600',
+      bgColor: 'bg-emerald-50',
+      borderColor: 'border-emerald-100',
+    },
+  ];
+
+  if (isLoading && data.length === 0) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="animate-pulse bg-white border border-zinc-200 rounded-xl p-6 h-28">
+            <div className="flex justify-between items-center mb-4">
+              <div className="h-4 bg-zinc-200 rounded w-24"></div>
+              <div className="h-8 bg-zinc-200 rounded-full w-8"></div>
+            </div>
+            <div className="h-6 bg-zinc-200 rounded w-32 mb-2"></div>
+            <div className="h-3 bg-zinc-150 rounded w-16"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {cards.map((card, idx) => {
+        const Icon = card.icon;
+        return (
+          <div
+            key={idx}
+            className={`bg-white border border-zinc-200 hover:border-zinc-300 transition-all duration-200 rounded-xl p-6 shadow-sm flex flex-col justify-between`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-zinc-500 text-sm font-semibold tracking-wide uppercase">
+                {card.title}
+              </span>
+              <div className={`${card.bgColor} ${card.iconColor} p-2 rounded-lg border ${card.borderColor}`}>
+                <Icon className="h-5 w-5" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-zinc-950 font-sans tracking-tight">
+                {card.value}
+              </h3>
+              <p className="text-xs text-zinc-500 mt-1 flex items-center gap-1 font-medium">
+                {card.subtext}
+              </p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
