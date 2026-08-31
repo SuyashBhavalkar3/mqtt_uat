@@ -51,7 +51,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
           height={radius * 2}
           href={item.imageUrl}
           clipPath={`url(#clip-${index})`}
-          preserveAspectRatio="xMidYMid slice"
+          preserveAspectRatio="xMidYMin slice"
         />
       </g>
     );
