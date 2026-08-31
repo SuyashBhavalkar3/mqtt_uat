@@ -17,6 +17,7 @@ export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime:
   const json = await response.json();
   const rawData = json.data;
   const images = json.images || {};
+  const names = json.names || {};
 
   if (!Array.isArray(rawData)) {
     throw new Error('API response is not a valid JSON array');
@@ -49,8 +50,11 @@ export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime:
 
     const tsmVal = row[idxTsm];
     if (tsmVal === undefined || tsmVal === null) continue;
-    const tsm = String(tsmVal).trim();
-    if (!tsm) continue;
+    const rawTsm = String(tsmVal).trim();
+    if (!rawTsm) continue;
+
+    // Resolve name from env if available (case-insensitive lookup, fallback to sheet value)
+    const tsm = names[rawTsm.toUpperCase()] || rawTsm;
 
     const orderAmount = parseFloat(String(row[idxOrderAmount] ?? 0));
     const orders = parseInt(String(row[idxOrders] ?? 0), 10);
@@ -65,7 +69,9 @@ export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime:
       : 0;
     
     const gap = cleanOrderAmount - cleanReceivedAmount;
-    const imageUrl = images[tsm.toUpperCase()] || '';
+    
+    // Resolve image URL (check mapped name first, then fallback to original sheet TSM key)
+    const imageUrl = images[rawTsm.toUpperCase()] || images[tsm.toUpperCase()] || '';
 
     parsedData.push({
       tsm,

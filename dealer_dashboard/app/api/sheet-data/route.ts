@@ -39,7 +39,15 @@ export async function GET() {
       }
     }
 
-    return new Response(JSON.stringify({ data: rawData, images }), {
+    const names: Record<string, string> = {};
+    for (const key of Object.keys(process.env)) {
+      if (key.endsWith('_NAME')) {
+        const tsmKey = key.replace('_NAME', '').trim().toUpperCase();
+        names[tsmKey] = process.env[key] || '';
+      }
+    }
+
+    return new Response(JSON.stringify({ data: rawData, images, names }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
