@@ -2,6 +2,15 @@ import { TSMData } from '../types/dashboard';
 
 const API_URL = '/api/sheet-data';
 
+// Static local profile images map matching employee names case-insensitively
+const TSM_IMAGES_MAP: Record<string, string> = {
+  'SAGAR RAJENDRA BORASE': '/tsm_images/sagar_borse.jpeg',
+  'AKSHAY RAMCHANDRA GAWALI': '/tsm_images/akshay_gawali.jpeg',
+  'RAHUL ASHOK MAIRALE': '/tsm_images/rahul_mairale.jpeg',
+  'AMIT RAJABHAU SHINDE': '/tsm_images/amit_shinde.jpeg',
+  'RAVINDRA ASHOKRAO JADHAV': '/tsm_images/ravindra_jadhav.jpeg'
+};
+
 export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime: number }> {
   const tzOffset = new Date().getTimezoneOffset() * 60000;
   const localISODate = new Date(Date.now() - tzOffset).toISOString().split('T')[0];
@@ -20,8 +29,6 @@ export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime:
 
   const json = await response.json();
   const rawData = json.data;
-  const images = json.images || {};
-  const names = json.names || {};
 
   // Validate backend API response structure
   if (!rawData || !rawData.message || !rawData.message.data || !Array.isArray(rawData.message.data.employees)) {
@@ -51,15 +58,8 @@ export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime:
     
     const gap = cleanOrderAmount - cleanReceivedAmount;
 
-    // Resolve profile image URL
-    let imageUrl = '';
-    if (emp.profile_photo) {
-      imageUrl = emp.profile_photo.startsWith('http')
-        ? emp.profile_photo
-        : `https://uatpreprod.gbru.in${emp.profile_photo}`;
-    }
-
-
+    // Resolve profile image URL from static local mapping matching the clean name
+    const imageUrl = TSM_IMAGES_MAP[tsm.toUpperCase()] || '';
 
     parsedData.push({
       tsm,
