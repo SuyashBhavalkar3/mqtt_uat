@@ -20,6 +20,10 @@ interface OrderAmountChartProps {
 }
 
 export function OrderAmountChart({ data }: OrderAmountChartProps) {
+  const sortedData = React.useMemo(() => {
+    return [...data].sort((a, b) => a.tsm.localeCompare(b.tsm));
+  }, [data]);
+
   const formatYAxis = (value: number) => {
     if (value >= 100000) {
       return `₹${(value / 100000).toFixed(2).replace(/\.00$/, '')}L`;
@@ -32,7 +36,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
 
   const renderCustomLabel = (props: any) => {
     const { x, width, index } = props;
-    const item = data[index];
+    const item = sortedData[index];
     if (!item || !item.imageUrl) return null;
 
     // Fixed Y coordinate at the top of the grid to align all photos in a straight line below the HTML legend
@@ -136,7 +140,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
       <div className="h-96 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={data}
+            data={sortedData}
             margin={{
               top: 90,
               right: 15,
