@@ -30,7 +30,6 @@ export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime:
 
   // Validate backend API response structure
   if (!rawData || !rawData.message || !rawData.message.data || !Array.isArray(rawData.message.data.employees)) {
-    console.warn('API response is missing message.data.employees array, returning empty dataset.');
     return { data: [], pingTime };
   }
 

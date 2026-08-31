@@ -20,8 +20,8 @@ export async function GET(request: Request) {
       cache: 'no-store',
       headers: {
         'Accept': 'application/json',
-        'X_API_KEY': API_KEY,
-        'X_API_SECRET': API_SECRET,
+        'X-API-KEY': API_KEY,
+        'X-API-SECRET': API_SECRET,
       },
     });
 
