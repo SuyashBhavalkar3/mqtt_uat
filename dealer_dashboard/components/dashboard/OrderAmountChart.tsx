@@ -135,7 +135,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
         </span>
       </div>
 
-      <div className="h-96 w-full">
+      <div className="h-[450px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={sortedData}
@@ -171,6 +171,15 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
             <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f4f4f5', opacity: 0.5 }} />
             <Bar
               yAxisId="left"
+              name="Order Amount"
+              dataKey="orderAmount"
+              fill="#3b82f6"
+              radius={[4, 4, 0, 0]}
+              maxBarSize={30}
+              isAnimationActive={false}
+            />
+            <Bar
+              yAxisId="left"
               name="Received Amount"
               dataKey="receivedAmount"
               fill="#10b981"
@@ -180,15 +189,6 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
             >
               <LabelList dataKey="imageUrl" content={renderCustomLabel} />
             </Bar>
-            <Bar
-              yAxisId="left"
-              name="Order Amount"
-              dataKey="orderAmount"
-              fill="#3b82f6"
-              radius={[4, 4, 0, 0]}
-              maxBarSize={30}
-              isAnimationActive={false}
-            />
 
           </BarChart>
         </ResponsiveContainer>
