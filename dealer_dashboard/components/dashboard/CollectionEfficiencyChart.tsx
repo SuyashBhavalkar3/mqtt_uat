@@ -103,7 +103,7 @@ export function CollectionEfficiencyChart({ data }: CollectionEfficiencyChartPro
             <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f4f4f5', opacity: 0.5 }} />
             <Bar
               dataKey="collectionEfficiency"
-              fill="#059669"
+              fill="#3b82f6"
               radius={[0, 4, 4, 0]}
               maxBarSize={30}
               label={renderCustomizedLabel}
