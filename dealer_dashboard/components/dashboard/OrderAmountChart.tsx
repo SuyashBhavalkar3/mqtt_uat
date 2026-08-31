@@ -150,6 +150,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               tickLine={false}
               axisLine={false}
               dy={10}
+              tick={{ fontWeight: '600', fill: '#18181b' }}
             />
             {/* Primary Y-Axis (Left) - Amount Scale */}
             <YAxis
