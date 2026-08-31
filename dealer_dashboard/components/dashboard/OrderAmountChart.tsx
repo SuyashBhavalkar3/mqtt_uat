@@ -83,7 +83,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               <span className="font-medium">Order Amount:</span>
               <span className="font-mono font-bold">{formatCurrency(orderAmount)}</span>
             </p>
-            <p className="text-[#60a5fa] flex items-center justify-between gap-6">
+            <p className="text-[#10b981] flex items-center justify-between gap-6">
               <span className="font-medium">Received Amount:</span>
               <span className="font-mono font-bold">{formatCurrency(receivedAmount)}</span>
             </p>
@@ -125,7 +125,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
           <span>Order Amount</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#60a5fa' }}></span>
+          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#10b981' }}></span>
           <span>Received Amount</span>
         </span>
       </div>
@@ -166,6 +166,17 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
             <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f4f4f5', opacity: 0.5 }} />
             <Bar
               yAxisId="left"
+              name="Received Amount"
+              dataKey="receivedAmount"
+              fill="#10b981"
+              radius={[4, 4, 0, 0]}
+              maxBarSize={30}
+              isAnimationActive={false}
+            >
+              <LabelList dataKey="imageUrl" content={renderCustomLabel} />
+            </Bar>
+            <Bar
+              yAxisId="left"
               name="Order Amount"
               dataKey="orderAmount"
               fill="#3b82f6"
@@ -173,17 +184,6 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               maxBarSize={30}
               isAnimationActive={false}
             />
-            <Bar
-              yAxisId="left"
-              name="Received Amount"
-              dataKey="receivedAmount"
-              fill="#60a5fa"
-              radius={[4, 4, 0, 0]}
-              maxBarSize={30}
-              isAnimationActive={false}
-            >
-              <LabelList dataKey="imageUrl" content={renderCustomLabel} />
-            </Bar>
 
           </BarChart>
         </ResponsiveContainer>
