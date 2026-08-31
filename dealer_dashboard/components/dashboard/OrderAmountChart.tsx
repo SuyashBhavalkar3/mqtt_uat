@@ -21,7 +21,12 @@ interface OrderAmountChartProps {
 
 export function OrderAmountChart({ data }: OrderAmountChartProps) {
   const sortedData = React.useMemo(() => {
-    return [...data].sort((a, b) => a.tsm.localeCompare(b.tsm));
+    const customOrder = ['Ravindra', 'Sagar', 'Amit', 'Akshay', 'Rahul'];
+    return [...data].sort((a, b) => {
+      const idxA = customOrder.findIndex(name => a.tsm.toLowerCase().includes(name.toLowerCase()));
+      const idxB = customOrder.findIndex(name => b.tsm.toLowerCase().includes(name.toLowerCase()));
+      return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+    });
   }, [data]);
 
   const formatYAxis = (value: number) => {
