@@ -24,14 +24,14 @@ export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime:
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  const pingTime = 2.5;
-
   const json = await response.json();
   const rawData = json.data;
+  const pingTime = json.pingTime ? parseFloat(json.pingTime) : 2.5;
 
   // Validate backend API response structure
   if (!rawData || !rawData.message || !rawData.message.data || !Array.isArray(rawData.message.data.employees)) {
-    throw new Error('API response is missing message.data.employees array');
+    console.warn('API response is missing message.data.employees array, returning empty dataset.');
+    return { data: [], pingTime };
   }
 
   const employees = rawData.message.data.employees;

@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 const BASE_URL = process.env.API_BASE_URL || 'https://uatpreprod.gbru.in';
-const API_KEY = process.env['X-API-KEY'] || '';
-const API_SECRET = process.env['X-API-SECRET'] || '';
+const API_KEY = process.env['X_API_KEY'] || '';
+const API_SECRET = process.env['X_API_SECRET'] || '';
 const API_URL = `${BASE_URL}/api/method/warrior.apis.performance_report.top_employee_performance`;
 
 export async function GET(request: Request) {
@@ -20,8 +20,8 @@ export async function GET(request: Request) {
       cache: 'no-store',
       headers: {
         'Accept': 'application/json',
-        'X-API-KEY': API_KEY,
-        'X-API-SECRET': API_SECRET,
+        'X_API_KEY': API_KEY,
+        'X_API_SECRET': API_SECRET,
       },
     });
 
@@ -38,8 +38,9 @@ export async function GET(request: Request) {
     }
 
     const rawData = await response.json();
+    const pingTime = process.env.PING_TIME || '60';
 
-    return new Response(JSON.stringify({ data: rawData }), {
+    return new Response(JSON.stringify({ data: rawData, pingTime }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
