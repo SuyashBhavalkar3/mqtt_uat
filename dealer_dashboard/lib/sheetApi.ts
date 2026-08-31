@@ -56,8 +56,8 @@ export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime:
     
     const gap = cleanOrderAmount - cleanReceivedAmount;
 
-    // Resolve profile image URL from static local mapping matching the clean name
-    const imageUrl = TSM_IMAGES_MAP[tsm.toUpperCase()] || '';
+    // Resolve profile image URL: use API photo first, fallback to static local map if empty
+    const imageUrl = emp.profile_photo || TSM_IMAGES_MAP[tsm.toUpperCase()] || '';
 
     parsedData.push({
       tsm,
