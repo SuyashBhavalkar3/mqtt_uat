@@ -36,8 +36,8 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
     if (!item || !item.imageUrl) return null;
 
     // Fixed Y coordinate at the top of the grid to align all photos in a straight line below the HTML legend
-    const fixedY = 28;
-    const radius = 24; // Bigger diameter (48px)
+    const fixedY = 38;
+    const radius = 32; // Even bigger diameter (64px) to fill row height
 
     return (
       <g>
@@ -138,7 +138,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
           <BarChart
             data={data}
             margin={{
-              top: 55,
+              top: 75,
               right: 15,
               left: -10,
               bottom: 0,
