@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-const API_URL = process.env.GOOGLE_SHEETS_API_URL || 'https://script.google.com/macros/s/AKfycbyqEHyruNtUycpSOeRJy-iSJhk-IIgGIceH8lqRV_NB5_xG_z4bJ9pWLSEd89xzifJq/exec';
+const BASE_URL = process.env.API_BASE_URL || 'https://uatpreprod.gbru.in';
+const API_KEY = process.env['X-API-KEY'] || '';
+const API_SECRET = process.env['X-API-SECRET'] || '';
+const API_URL = `${BASE_URL}/api/method/warrior.apis.performance_report.top_employee_performance`;
 
 export async function GET() {
   try {
@@ -11,6 +14,8 @@ export async function GET() {
       cache: 'no-store',
       headers: {
         'Accept': 'application/json',
+        'X-API-KEY': API_KEY,
+        'X-API-SECRET': API_SECRET,
       },
     });
 
@@ -18,7 +23,7 @@ export async function GET() {
 
     if (!response.ok) {
       return new Response(
-        JSON.stringify({ error: `Failed to fetch from Google Sheets: status ${response.status}` }),
+        JSON.stringify({ error: `Failed to fetch from Performance API: status ${response.status}` }),
         {
           status: response.status,
           headers: {
