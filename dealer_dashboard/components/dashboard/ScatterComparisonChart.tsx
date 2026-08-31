@@ -85,9 +85,9 @@ export function ScatterComparisonChart({ data }: ScatterComparisonChartProps) {
             data={data}
             margin={{
               top: 10,
-              right: 20,
+              right: 40,
               bottom: 10,
-              left: -10,
+              left: 10,
             }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" vertical={false} />
@@ -99,6 +99,7 @@ export function ScatterComparisonChart({ data }: ScatterComparisonChartProps) {
               axisLine={false}
               dy={10}
               tick={{ fontWeight: '600', fill: '#18181b' }}
+              padding={{ left: 50, right: 50 }}
             />
             <YAxis
               stroke="#71717a"
