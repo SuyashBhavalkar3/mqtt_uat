@@ -2,14 +2,13 @@
 
 import React from 'react';
 import {
-  ScatterChart,
-  Scatter,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  ZAxis,
 } from 'recharts';
 import { TSMData } from '../../types/dashboard';
 import { formatCurrency } from '../../lib/calculations';
@@ -31,21 +30,21 @@ export function ScatterComparisonChart({ data }: ScatterComparisonChartProps) {
         <div className="bg-white p-4 border border-zinc-200 shadow-lg rounded-lg text-sm">
           <p className="font-bold text-zinc-900 border-b border-zinc-100 pb-1 mb-2">{item.tsm}</p>
           <div className="space-y-1">
-            <p className="text-zinc-600 flex justify-between gap-6">
+            <p className="text-blue-600 flex justify-between gap-6">
               <span className="font-medium">Order Amount:</span>
-              <span className="font-mono font-bold text-zinc-900">{formatCurrency(item.orderAmount)}</span>
+              <span className="font-mono font-bold">{formatCurrency(item.orderAmount)}</span>
             </p>
-            <p className="text-zinc-600 flex justify-between gap-6">
+            <p className="text-emerald-600 flex justify-between gap-6">
               <span className="font-medium">Received Amount:</span>
-              <span className="font-mono font-bold text-zinc-900">{formatCurrency(item.receivedAmount)}</span>
+              <span className="font-mono font-bold">{formatCurrency(item.receivedAmount)}</span>
             </p>
-            <p className="text-indigo-600 flex justify-between gap-6 pt-1 border-t border-zinc-100 font-semibold">
-              <span>Collection Efficiency:</span>
-              <span className="font-mono">{item.collectionEfficiency.toFixed(2)}%</span>
+            <p className="text-zinc-600 flex justify-between gap-6 pt-1 border-t border-zinc-100">
+              <span className="font-medium">Collection Gap:</span>
+              <span className="font-mono font-semibold text-zinc-900">{formatCurrency(item.gap)}</span>
             </p>
-            <p className="text-amber-600 flex justify-between gap-6 font-semibold">
-              <span>Collection Gap:</span>
-              <span className="font-mono">{formatCurrency(item.gap)}</span>
+            <p className="text-zinc-500 flex justify-between gap-6 text-xs">
+              <span className="font-medium">Collection %:</span>
+              <span className="font-mono font-semibold">{item.collectionEfficiency.toFixed(2)}%</span>
             </p>
           </div>
         </div>
@@ -54,59 +53,77 @@ export function ScatterComparisonChart({ data }: ScatterComparisonChartProps) {
     return null;
   };
 
-  // Find max values to set domain nicely
-  const maxOrder = Math.max(...data.map(d => d.orderAmount), 100);
-  const maxReceived = Math.max(...data.map(d => d.receivedAmount), 100);
-  const chartMax = Math.ceil(Math.max(maxOrder, maxReceived) * 1.1);
-
   return (
     <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
       <div className="mb-4">
         <h3 className="text-lg font-bold text-zinc-900">
-          Order Amount vs Received Amount Correlation
+          Order Amount vs Received Amount Comparison
         </h3>
         <p className="text-xs text-zinc-500 mt-0.5">
-          Plotting each TSM to visualize collection performance against order volume
+          Comparing order booking against payment collections for each TSM
         </p>
+      </div>
+
+      {/* Legend rendered as standard HTML */}
+      <div className="flex justify-center gap-6 text-[12px] font-semibold text-zinc-600 pb-2 border-b border-zinc-100 mb-6">
+        <span className="flex items-center gap-1.5">
+          <span className="w-4 h-0.5 bg-[#2563eb] inline-block"></span>
+          <span>Order Amount</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-4 h-0.5 bg-[#059669] inline-block"></span>
+          <span>Received Amount</span>
+        </span>
       </div>
 
       <div className="h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart
+          <LineChart
+            data={data}
             margin={{
-              top: 20,
+              top: 10,
               right: 20,
-              bottom: 20,
-              left: 0,
+              bottom: 10,
+              left: -10,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" vertical={false} />
             <XAxis
-              type="number"
-              dataKey="orderAmount"
-              name="Order Amount"
+              dataKey="tsm"
               stroke="#71717a"
               fontSize={12}
               tickLine={false}
-              tickFormatter={formatAmount}
-              label={{ value: 'Order Amount', position: 'bottom', offset: 0, fontSize: 12, fill: '#71717a' }}
-              domain={[0, chartMax]}
+              axisLine={false}
+              dy={10}
+              tick={{ fontWeight: '600', fill: '#18181b' }}
             />
             <YAxis
-              type="number"
-              dataKey="receivedAmount"
-              name="Received Amount"
               stroke="#71717a"
               fontSize={12}
               tickLine={false}
+              axisLine={false}
               tickFormatter={formatAmount}
-              label={{ value: 'Received Amount', angle: -90, position: 'insideLeft', offset: 10, fontSize: 12, fill: '#71717a' }}
-              domain={[0, chartMax]}
             />
-            <ZAxis range={[100, 100]} />
-            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-            <Scatter name="TSMs" data={data} fill="#1e3a8a" line={false} shape="circle" />
-          </ScatterChart>
+            <Tooltip content={<CustomTooltip />} />
+            <Line
+              type="monotone"
+              dataKey="orderAmount"
+              stroke="#2563eb"
+              strokeWidth={3}
+              dot={{ r: 4, strokeWidth: 2 }}
+              activeDot={{ r: 6 }}
+              isAnimationActive={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="receivedAmount"
+              stroke="#059669"
+              strokeWidth={3}
+              dot={{ r: 4, strokeWidth: 2 }}
+              activeDot={{ r: 6 }}
+              isAnimationActive={false}
+            />
+          </LineChart>
         </ResponsiveContainer>
       </div>
     </div>
