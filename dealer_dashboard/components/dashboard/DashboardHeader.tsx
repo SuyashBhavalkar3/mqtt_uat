@@ -57,7 +57,7 @@ export function DashboardHeader({ status, lastUpdated, onRefresh }: DashboardHea
         <button
           onClick={onRefresh}
           disabled={isLoading}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors duration-200 shadow-sm hover:shadow active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors duration-200 shadow-sm hover:shadow active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           <span>Refresh</span>
