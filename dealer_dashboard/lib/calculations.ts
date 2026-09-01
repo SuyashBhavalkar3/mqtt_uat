@@ -24,7 +24,8 @@ export function calculateSummary(data: TSMData[]): DashboardSummary {
     };
   }
 
-  const totalTsmCount = data.length;
+  const actualTsms = data.filter(d => !d.tsm.toLowerCase().includes('unmapped'));
+  const totalTsmCount = actualTsms.length > 0 ? actualTsms.length : data.length;
   let totalOrderAmount = 0;
   let totalOrders = 0;
   let totalReceivedAmount = 0;
@@ -59,11 +60,14 @@ export function calculateInsights(data: TSMData[]): PerformanceInsightsData {
     };
   }
 
+  const actualTsms = data.filter(d => !d.tsm.toLowerCase().includes('unmapped'));
+  const candidateTsms = actualTsms.length > 0 ? actualTsms : data;
+
   let highestOrderTsm: TSMData | null = null;
   let highestOrdersTsm: TSMData | null = null;
   let highestReceivedTsm: TSMData | null = null;
 
-  for (const item of data) {
+  for (const item of candidateTsms) {
     if (item.orderAmount > 0 && (!highestOrderTsm || item.orderAmount > highestOrderTsm.orderAmount)) {
       highestOrderTsm = item;
     }
@@ -75,7 +79,7 @@ export function calculateInsights(data: TSMData[]): PerformanceInsightsData {
     }
   }
 
-  const activeTsms = data.filter(item => item.orderAmount > 0);
+  const activeTsms = candidateTsms.filter(item => item.orderAmount > 0);
   let bestCollectionTsm: TSMData | null = null;
 
   if (activeTsms.length > 0) {

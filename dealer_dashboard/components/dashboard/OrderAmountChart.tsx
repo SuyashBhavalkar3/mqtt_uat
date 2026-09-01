@@ -21,7 +21,7 @@ interface OrderAmountChartProps {
 
 export function OrderAmountChart({ data }: OrderAmountChartProps) {
   const sortedData = React.useMemo(() => {
-    const customOrder = ['Ravindra', 'Sagar', 'Amit', 'Akshay', 'Rahul'];
+    const customOrder = ['Ravindra', 'Sagar', 'Amit', 'Akshay', 'Rahul', 'Unmapped'];
     return [...data].sort((a, b) => {
       const idxA = customOrder.findIndex(name => a.tsm.toLowerCase().includes(name.toLowerCase()));
       const idxB = customOrder.findIndex(name => b.tsm.toLowerCase().includes(name.toLowerCase()));

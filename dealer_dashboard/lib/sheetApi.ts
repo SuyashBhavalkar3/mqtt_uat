@@ -2,14 +2,17 @@ import { TSMData } from '../types/dashboard';
 
 const API_URL = '/api/sheet-data';
 
-// Static local profile images map matching employee names case-insensitively
-const TSM_IMAGES_MAP: Record<string, string> = {
-  'SAGAR RAJENDRA BORASE': '/tsm_images/sagar_borse.jpeg',
-  'AKSHAY RAMCHANDRA GAWALI': '/tsm_images/akshay_gawali.jpeg',
-  'RAHUL ASHOK MAIRALE': '/tsm_images/rahul_mairale.jpeg',
-  'AMIT RAJABHAU SHINDE': '/tsm_images/amit_shinde.jpeg',
-  'RAVINDRA ASHOKRAO JADHAV': '/tsm_images/ravindra_jadhav.jpeg'
-};
+// Static local profile images resolver matching employee names
+function getTsmImage(name: string, apiPhoto?: string | null): string {
+  const upper = name.toUpperCase();
+  if (upper.includes('SAGAR')) return '/tsm_images/sagar_borse.jpeg';
+  if (upper.includes('AKSHAY')) return '/tsm_images/akshay_gawali.jpeg';
+  if (upper.includes('RAHUL')) return '/tsm_images/rahul_mairale.jpeg';
+  if (upper.includes('AMIT')) return '/tsm_images/amit_shinde.jpeg';
+  if (upper.includes('RAVINDRA')) return '/tsm_images/ravindra_jadhav.jpeg';
+  if (upper.includes('UNMAPPED')) return '/tsm_images/6tsm.jpg';
+  return apiPhoto || '';
+}
 
 export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime: number }> {
   const tzOffset = new Date().getTimezoneOffset() * 60000;
@@ -37,14 +40,15 @@ export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime:
   const parsedData: TSMData[] = [];
 
   for (const emp of employees) {
-    if (!emp || !emp.employee_name) continue;
+    if (!emp || (!emp.employee_name && !emp.employee)) continue;
 
     // Clean up employee name spacing
-    const tsm = emp.employee_name.replace(/\s+/g, ' ').trim();
+    const rawName = emp.employee_name || emp.employee || 'Unmapped Orders';
+    const tsm = rawName.replace(/\s+/g, ' ').trim();
 
     const orderAmount = parseFloat(String(emp.order_amount ?? 0));
-    const orders = parseInt(String(emp.order_count ?? 0), 10);
-    const receivedAmount = parseFloat(String(emp.received_amount ?? 0));
+    const orders = parseInt(String(emp.no_of_orders ?? emp.order_count ?? 0), 10);
+    const receivedAmount = parseFloat(String(emp.receipt_amount ?? emp.received_amount ?? 0));
 
     const cleanOrderAmount = isNaN(orderAmount) ? 0 : orderAmount;
     const cleanOrders = isNaN(orders) ? 0 : orders;
@@ -56,8 +60,8 @@ export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime:
     
     const gap = cleanOrderAmount - cleanReceivedAmount;
 
-    // Resolve profile image URL: use API photo first, fallback to static local map if empty
-    const imageUrl = emp.profile_photo || TSM_IMAGES_MAP[tsm.toUpperCase()] || '';
+    // Resolve profile image URL using local static images first, fallback to API
+    const imageUrl = getTsmImage(tsm, emp.profile_photo);
 
     parsedData.push({
       tsm,

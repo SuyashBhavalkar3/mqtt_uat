@@ -19,7 +19,7 @@ export function PerformanceTable({ data }: PerformanceTableProps) {
 
   // Find the overall best-performing TSM based on efficiency (and minimal orders to be fair)
   const bestTsmName = useMemo(() => {
-    const activeTsms = data.filter(d => d.orderAmount > 0);
+    const activeTsms = data.filter(d => d.orderAmount > 0 && !d.tsm.toLowerCase().includes('unmapped'));
     if (activeTsms.length === 0) return '';
     return activeTsms.reduce((best, current) =>
       current.orderAmount > best.orderAmount ? current : best
