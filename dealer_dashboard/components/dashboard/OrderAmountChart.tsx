@@ -71,14 +71,8 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      // Find payload items by dataKey to ensure correct mapping
       const orderAmountPayload = payload.find((p: any) => p.dataKey === 'orderAmount');
-      const receivedAmountPayload = payload.find((p: any) => p.dataKey === 'receivedAmount');
-      const ordersPayload = payload.find((p: any) => p.dataKey === 'orders');
-
       const orderAmount = orderAmountPayload ? orderAmountPayload.value : 0;
-      const receivedAmount = receivedAmountPayload ? receivedAmountPayload.value : 0;
-      const orders = ordersPayload ? ordersPayload.value : 0;
 
       return (
         <div className="bg-white p-4 border border-zinc-200 shadow-lg rounded-lg text-sm">
@@ -88,23 +82,6 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               <span className="font-medium">Order Amount:</span>
               <span className="font-mono font-bold">{formatCurrency(orderAmount)}</span>
             </p>
-            <p className="text-[#10b981] flex items-center justify-between gap-6">
-              <span className="font-medium">Received Amount:</span>
-              <span className="font-mono font-bold">{formatCurrency(receivedAmount)}</span>
-            </p>
-
-            <div className="pt-1.5 border-t border-zinc-100 flex flex-col gap-0.5">
-              <p className="text-zinc-600 flex items-center justify-between gap-6">
-                <span className="font-medium">Collection %:</span>
-                <span className="font-mono font-bold">
-                  {(((receivedAmount) / (orderAmount || 1)) * 100).toFixed(2)}%
-                </span>
-              </p>
-              <p className="text-zinc-500 flex items-center justify-between gap-6 text-xs">
-                <span className="font-medium">Collection Gap:</span>
-                <span className="font-mono font-semibold">{formatCurrency(orderAmount - receivedAmount)}</span>
-              </p>
-            </div>
           </div>
         </div>
       );
@@ -119,7 +96,7 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
           Order Performance by TSM
         </h3>
         <p className="text-xs text-zinc-500 mt-0.5">
-          Grouped overview showing target amounts and collections for each TSM
+          Overview showing order amounts booked for each TSM
         </p>
       </div>
 
@@ -128,10 +105,6 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#3b82f6' }}></span>
           <span>Order Amount</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#10b981' }}></span>
-          <span>Received Amount</span>
         </span>
       </div>
 
@@ -175,23 +148,12 @@ export function OrderAmountChart({ data }: OrderAmountChartProps) {
               dataKey="orderAmount"
               fill="#3b82f6"
               radius={[4, 4, 0, 0]}
-              maxBarSize={30}
-              isAnimationActive={false}
-              minPointSize={1}
-            />
-            <Bar
-              yAxisId="left"
-              name="Received Amount"
-              dataKey="receivedAmount"
-              fill="#10b981"
-              radius={[4, 4, 0, 0]}
-              maxBarSize={30}
+              maxBarSize={40}
               isAnimationActive={false}
               minPointSize={1}
             >
               <LabelList dataKey="imageUrl" content={renderCustomLabel} />
             </Bar>
-
           </BarChart>
         </ResponsiveContainer>
       </div>
