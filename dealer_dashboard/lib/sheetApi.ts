@@ -14,10 +14,16 @@ function getTsmImage(name: string, apiPhoto?: string | null): string {
   return apiPhoto || '';
 }
 
-export async function fetchDashboardData(): Promise<{ data: TSMData[]; pingTime: number }> {
-  const tzOffset = new Date().getTimezoneOffset() * 60000;
-  const localISODate = new Date(Date.now() - tzOffset).toISOString().split('T')[0];
-  const url = `${API_URL}?from_date=${localISODate}&to_date=${localISODate}`;
+export async function fetchDashboardData(startDate?: string, endDate?: string): Promise<{ data: TSMData[]; pingTime: number }> {
+  let start = startDate;
+  let end = endDate;
+  if (!start || !end) {
+    const tzOffset = new Date().getTimezoneOffset() * 60000;
+    const localISODate = new Date(Date.now() - tzOffset).toISOString().split('T')[0];
+    start = start || localISODate;
+    end = end || localISODate;
+  }
+  const url = `${API_URL}?start_date=${start}&end_date=${end}`;
 
   const response = await fetch(url, {
     cache: 'no-store',

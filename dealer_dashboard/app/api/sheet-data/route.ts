@@ -11,8 +11,22 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const targetUrl = new URL(API_URL);
+    
+    const startDate = searchParams.get('start_date') || searchParams.get('from_date');
+    const endDate = searchParams.get('end_date') || searchParams.get('to_date');
+
+    if (startDate) {
+      targetUrl.searchParams.set('start_date', startDate);
+    }
+    if (endDate) {
+      targetUrl.searchParams.set('end_date', endDate);
+    }
+
+    // Forward any other query parameters
     searchParams.forEach((value, key) => {
-      targetUrl.searchParams.set(key, value);
+      if (key !== 'from_date' && key !== 'to_date' && key !== 'start_date' && key !== 'end_date') {
+        targetUrl.searchParams.set(key, value);
+      }
     });
 
     const response = await fetch(targetUrl.toString(), {
