@@ -1,152 +1,68 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { TSMData, FetchStatus } from '../types/dashboard';
-import { fetchDashboardData } from '../lib/sheetApi';
-import { DashboardHeader } from '../components/dashboard/DashboardHeader';
-import { KPICards } from '../components/dashboard/KPICards';
-import { OrderAmountChart } from '../components/dashboard/OrderAmountChart';
-import { OrdersChart } from '../components/dashboard/OrdersChart';
-import { CollectionEfficiencyChart } from '../components/dashboard/CollectionEfficiencyChart';
-import { ScatterComparisonChart } from '../components/dashboard/ScatterComparisonChart';
-import { PerformanceTable } from '../components/dashboard/PerformanceTable';
-import { PerformanceInsights } from '../components/dashboard/PerformanceInsights';
-import { AlertCircle } from 'lucide-react';
+import React from 'react';
+import { CalendarCheck, ShieldCheck, Clock } from 'lucide-react';
 
 export default function Home() {
-  const [data, setData] = useState<TSMData[]>([]);
-  const [status, setStatus] = useState<FetchStatus>('loading');
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  
-  const [pollingInterval, setPollingInterval] = useState<number>(2500); // default to 2.5s
-  
-  // Use ref to hold polling interval ID
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const loadData = useCallback(async (isPolling = false) => {
-    if (!isPolling) {
-      setStatus(prev => prev === 'success' ? 'syncing' : 'loading');
-    }
-
-    try {
-      const { data: fetched, pingTime } = await fetchDashboardData();
-      setData(fetched);
-      setStatus('success');
-      setLastUpdated(new Date());
-      if (pingTime > 0) {
-        setPollingInterval(pingTime * 1000);
-      }
-    } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      // Keep previous data but signal connection issue
-      setStatus('error');
-    }
-  }, []);
-
-  // Poll configuration effect
-  useEffect(() => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-    }
-
-    pollingIntervalRef.current = setInterval(() => {
-      loadData(true);
-    }, pollingInterval);
-
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, [pollingInterval, loadData]);
-
-  // Initial load
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const handleManualRefresh = () => {
-    loadData();
-    // Restart polling interval to reset the timer
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-    }
-    pollingIntervalRef.current = setInterval(() => {
-      loadData(true);
-    }, pollingInterval);
-  };
-
-  const isInitialLoading = status === 'loading' && data.length === 0;
-
   return (
-    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* Header */}
-        <DashboardHeader
-          status={status}
-          lastUpdated={lastUpdated}
-          onRefresh={handleManualRefresh}
-        />
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-12">
+      {/* Background soft ambient glows */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-60"></div>
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-100 rounded-full blur-3xl opacity-60"></div>
+      </div>
 
-        {status === 'error' && data.length === 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center max-w-lg mx-auto">
-            <AlertCircle className="h-12 w-12 text-amber-600 mx-auto mb-4 animate-bounce" />
-            <h3 className="text-lg font-bold text-zinc-900">Failed to Connect</h3>
-            <p className="text-sm text-zinc-600 mt-2">
-              We couldn&apos;t retrieve the dealer meet sheet data. Please check your internet connection. Retrying automatically...
-            </p>
-            <button
-              onClick={handleManualRefresh}
-              className="mt-4 px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition"
-            >
-              Retry Now
-            </button>
+      <div className="max-w-xl w-full text-center">
+        {/* Top Badge */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-semibold tracking-wide uppercase shadow-sm mb-8">
+          <CalendarCheck className="w-4 h-4 text-blue-600" />
+          <span>Dealer Meet 2026 • Event Concluded</span>
+        </div>
+
+        {/* Main Card */}
+        <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-xl shadow-zinc-200/40 p-8 sm:p-10 relative overflow-hidden">
+          {/* Top accent line */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-400"></div>
+
+          {/* Icon */}
+          <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mx-auto mb-6 text-blue-600 shadow-inner">
+            <ShieldCheck className="w-8 h-8" />
           </div>
-        )}
 
-        {/* Skeleton loaders for initial load */}
-        {isInitialLoading ? (
-          <div className="space-y-8 animate-pulse">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="bg-white border border-zinc-200 rounded-xl p-6 h-28"></div>
-              ))}
+          {/* Title */}
+          <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 tracking-tight">
+            Live Dashboard is Closed
+          </h1>
+
+          {/* Description */}
+          <p className="text-zinc-600 mt-3 text-sm sm:text-base leading-relaxed">
+            The live performance tracking session for the Dealer Meet has officially concluded. 
+            All order bookings and collections from the event have been recorded and saved.
+          </p>
+
+          {/* Status info box */}
+          <div className="mt-8 pt-6 border-t border-zinc-100 grid grid-cols-2 gap-4 text-left">
+            <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-100">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block">Session Status</span>
+              <span className="text-sm font-bold text-emerald-600 flex items-center gap-1.5 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                Archived & Finalized
+              </span>
             </div>
-            <div className="bg-white border border-zinc-200 rounded-xl p-6 h-96"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white border border-zinc-200 rounded-xl p-6 h-80"></div>
-              <div className="bg-white border border-zinc-200 rounded-xl p-6 h-80"></div>
+            <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-100">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 block">Access Mode</span>
+              <span className="text-sm font-bold text-zinc-700 flex items-center gap-1.5 mt-0.5">
+                <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                Read Only
+              </span>
             </div>
           </div>
-        ) : (
-          data.length > 0 && (
-            <div className="space-y-8">
-              
-              {/* Main Comparison Chart */}
-              <OrderAmountChart data={data} />
+        </div>
 
-              {/* Grid with side-by-side charts */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <OrdersChart data={data} />
-                <CollectionEfficiencyChart data={data} />
-              </div>
-
-              {/* Scatter Chart for Gap Visualization */}
-              <ScatterComparisonChart data={data} />
-
-              {/* Performance Table */}
-              <PerformanceTable data={data} />
-
-              {/* Performance Insights */}
-              <PerformanceInsights data={data} />
-
-              {/* KPI Cards (Footer status overview) */}
-              <KPICards data={data} isLoading={status === 'loading'} />
-
-            </div>
-          )
-        )}
+        {/* Footer info */}
+        <p className="text-xs text-zinc-400 mt-8">
+          © {new Date().getFullYear()} Shoption Dealer Performance Portal • Thank you for your participation!
+        </p>
       </div>
     </div>
   );
