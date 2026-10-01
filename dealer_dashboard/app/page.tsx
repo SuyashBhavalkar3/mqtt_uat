@@ -71,10 +71,7 @@ export default function Home() {
       }
     }
 
-    // Enforce validation: end cannot exceed today, start cannot exceed end
-    if (initialEnd > today) {
-      initialEnd = today;
-    }
+    // Enforce validation: start cannot exceed end
     if (initialStart > initialEnd) {
       initialStart = initialEnd;
     }
@@ -90,7 +87,6 @@ export default function Home() {
     let start = customStart || dateRangeRef.current.start || today;
     let end = customEnd || dateRangeRef.current.end || today;
 
-    if (end > today) end = today;
     if (start > end) start = end;
 
     if (!isPolling) {
@@ -114,12 +110,10 @@ export default function Home() {
 
   // Handle date change from user with persistence
   const handleDateChange = (newStart: string, newEnd: string) => {
-    const today = getTodayDateStr();
     let validatedStart = newStart;
     let validatedEnd = newEnd;
 
-    // Enforce validation: cannot exceed today, start cannot exceed end (can be equal)
-    if (validatedEnd > today) validatedEnd = today;
+    // Enforce validation: start cannot exceed end
     if (validatedStart > validatedEnd) validatedStart = validatedEnd;
 
     setStartDate(validatedStart);

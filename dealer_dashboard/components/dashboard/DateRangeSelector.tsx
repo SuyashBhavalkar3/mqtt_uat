@@ -45,13 +45,7 @@ export function DateRangeSelector({
 
     setErrorMsg(null);
 
-    // Rule 1: Cannot be greater than today
-    if (newStart > today) {
-      newStart = today;
-      setErrorMsg('From date cannot be in the future.');
-    }
-
-    // Rule 2: If start is after current end, adjust end to match start (single day view)
+    // If start is after current end, adjust end to match start
     let newEnd = endDate;
     if (newStart > newEnd) {
       newEnd = newStart;
@@ -66,13 +60,7 @@ export function DateRangeSelector({
 
     setErrorMsg(null);
 
-    // Rule 1: Cannot be greater than today
-    if (newEnd > today) {
-      newEnd = today;
-      setErrorMsg('To date cannot be in the future.');
-    }
-
-    // Rule 2: If end is before current start, adjust start to match end (single day view)
+    // If end is before current start, adjust start to match end
     let newStart = startDate;
     if (newEnd < newStart) {
       newStart = newEnd;
@@ -147,7 +135,7 @@ export function DateRangeSelector({
               <input
                 type="date"
                 value={startDate}
-                max={endDate || today}
+                max={endDate || undefined}
                 onChange={handleStartChange}
                 className="bg-white border border-zinc-200 rounded px-2.5 py-1 text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
               />
@@ -160,8 +148,7 @@ export function DateRangeSelector({
               <input
                 type="date"
                 value={endDate}
-                min={startDate}
-                max={today}
+                min={startDate || undefined}
                 onChange={handleEndChange}
                 className="bg-white border border-zinc-200 rounded px-2.5 py-1 text-xs font-semibold text-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
               />
